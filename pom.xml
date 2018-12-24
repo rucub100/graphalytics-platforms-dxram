@@ -9,7 +9,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<platform.group>de.hhu.bsinfo</platform.group>
 		<platform.name>dxram</platform.name>
+		<platform.version>0.6.0</platform.version>
 
 		<graphalytics.version>1.0.0</graphalytics.version>
 		<commons.exec.version>1.3</commons.exec.version>
@@ -22,8 +24,8 @@
 	<name>Graphalytics Platform Dxram</name>
 
 	<scm>
-		<developerConnection>scm:git:git@github.com:atlarge-research/graphalytics-platforms-dxram.git</developerConnection>
-		<url>https://github.com/atlarge-research/graphalytics-platforms-dxram</url>
+		<developerConnection>scm:git:git@github.com:rucub100/graphalytics-platforms-dxram.git</developerConnection>
+		<url>https://github.com/rucub100/graphalytics-platforms-dxram</url>
 	</scm>
 
 
@@ -47,6 +49,13 @@
 			<artifactId>graphalytics-validation</artifactId>
 			<version>${graphalytics.version}</version>
 			<scope>test</scope>
+		</dependency>
+
+		<!-- Platform specific dependencies -->
+		<dependency>
+			<groupId>${platform.group}</groupId>
+			<artifactId>${platform.name}</artifactId>
+			<version>${platform.version}</version>
 		</dependency>
 
 		<!-- Common software dependencies -->
@@ -252,6 +261,11 @@
 			<name>Graphalytics</name>
 			<url>http://graphalytics.site/maven</url>
 			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>dxram-repo</id>
+			<name>DXRAM Bintray Repository</name>
+			<url>https://dl.bintray.com/hhu-bsinfo/dxram</url>
 		</repository>
 	</repositories>
 </project>
