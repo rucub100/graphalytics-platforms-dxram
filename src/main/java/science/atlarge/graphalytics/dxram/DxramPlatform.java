@@ -17,6 +17,15 @@ package science.atlarge.graphalytics.dxram;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import de.hhu.bsinfo.dxram.DXRAM;
+import de.hhu.bsinfo.dxram.boot.BootService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
+import de.hhu.bsinfo.dxram.engine.DXRAMConfig;
+import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderException;
+import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJVMArgs;
+import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJsonFile2;
+import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.Algorithm;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
@@ -35,6 +44,9 @@ import science.atlarge.graphalytics.dxram.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.dxram.algorithms.sssp.SingleSourceShortestPathsJob;
 import science.atlarge.graphalytics.dxram.algorithms.wcc.WeaklyConnectedComponentsJob;
 import java.nio.file.Paths;
+import java.util.List;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.nio.file.Path;
 
 /**
@@ -44,18 +56,21 @@ import java.nio.file.Path;
  */
 public class DxramPlatform implements Platform {
 
+	private static DXRAM dxram;
+	private static BootService bootService;
+	private static ChunkService chunkService;
+	private static JobService jobService;
+
 	protected static final Logger LOG = LogManager.getLogger();
 
 	public static final String PLATFORM_NAME = "dxram";
 	public DxramLoader loader;
 
 	public DxramPlatform() {
-
 	}
 
 	@Override
 	public void verifySetup() throws Exception {
-
 	}
 
 	@Override
@@ -91,7 +106,7 @@ public class DxramPlatform implements Platform {
 		} catch (Exception e) {
 			throw new PlatformExecutionException("Failed to unload a Dxram dataset.", e);
 		}
-		LOG.info("Unloaded graph " +  loadedGraph.getFormattedGraph().getName());
+		LOG.info("Unloaded graph " + loadedGraph.getFormattedGraph().getName());
 	}
 
 	@Override
@@ -104,6 +119,7 @@ public class DxramPlatform implements Platform {
 		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
 		Path logDir = benchmarkRunSetup.getLogDir().resolve("platform").resolve("runner.logs");
 		DxramCollector.startPlatformLogging(logDir);
+		initDxram();
 	}
 
 	@Override
@@ -116,34 +132,34 @@ public class DxramPlatform implements Platform {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 		String inputPath = runtimeSetup.getLoadedGraph().getLoadedPath();
-		String outputPath = benchmarkRunSetup.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath().toString();
+		String outputPath = benchmarkRunSetup.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath()
+				.toString();
 
 		DxramJob job;
 		switch (algorithm) {
-			case BFS:
-				job = new BreadthFirstSearchJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			case CDLP:
-				job = new CommunityDetectionLPJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			case LCC:
-				job = new LocalClusteringCoefficientJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			case PR:
-				job = new PageRankJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			case WCC:
-				job = new WeaklyConnectedComponentsJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			case SSSP:
-				job = new SingleSourceShortestPathsJob(runSpecification, platformConfig, inputPath, outputPath);
-				break;
-			default:
-				throw new PlatformExecutionException("Failed to load algorithm implementation.");
+		case BFS:
+			job = new BreadthFirstSearchJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		case CDLP:
+			job = new CommunityDetectionLPJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		case LCC:
+			job = new LocalClusteringCoefficientJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		case PR:
+			job = new PageRankJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		case WCC:
+			job = new WeaklyConnectedComponentsJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		case SSSP:
+			job = new SingleSourceShortestPathsJob(runSpecification, platformConfig, inputPath, outputPath);
+			break;
+		default:
+			throw new PlatformExecutionException("Failed to load algorithm implementation.");
 		}
 
-		LOG.info("Executing benchmark with algorithm \"{}\" on graph \"{}\".",
-				benchmarkRun.getAlgorithm().getName(),
+		LOG.info("Executing benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
 				benchmarkRun.getFormattedGraph().getName());
 
 		try {
@@ -156,14 +172,14 @@ public class DxramPlatform implements Platform {
 			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 		}
 
-		LOG.info("Executed benchmark with algorithm \"{}\" on graph \"{}\".",
-				benchmarkRun.getAlgorithm().getName(),
+		LOG.info("Executed benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
 				benchmarkRun.getFormattedGraph().getName());
 
 	}
 
 	@Override
 	public BenchmarkMetrics finalize(RunSpecification runSpecification) throws Exception {
+		dxram.shutdown();
 		DxramCollector.stopPlatformLogging();
 		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
 		Path logDir = benchmarkRunSetup.getLogDir().resolve("platform");
@@ -181,5 +197,70 @@ public class DxramPlatform implements Platform {
 	@Override
 	public String getPlatformName() {
 		return PLATFORM_NAME;
+	}
+
+	/**
+	 * Initializes this driver's DXRAM instance.
+	 */
+	private void initDxram() {
+		printJVMArgs();
+		System.out.println();
+
+		dxram = new DXRAM();
+
+		System.out.println("Starting DXRAM, version " + dxram.getVersion());
+
+		DXRAMConfig config = bootstrapConfig(dxram);
+
+		if (!dxram.initialize(config, true)) {
+			System.out.println("Initializing DXRAM failed.");
+			System.exit(-1);
+		}
+
+		bootService = dxram.getService(BootService.class);
+		chunkService = dxram.getService(ChunkService.class);
+		jobService = dxram.getService(JobService.class);
+	}
+
+	/**
+	 * Bootstrap configuration loading/creation
+	 *
+	 * @param p_dxram DXRAM instance
+	 * @return Configuration instance to use to initialize DXRAM
+	 */
+	private static DXRAMConfig bootstrapConfig(final DXRAM p_dxram) {
+		DXRAMConfig config = p_dxram.createDefaultConfigInstance();
+
+		DXRAMConfigBuilderJsonFile2 configBuilderFile = new DXRAMConfigBuilderJsonFile2();
+		DXRAMConfigBuilderJVMArgs configBuilderJvmArgs = new DXRAMConfigBuilderJVMArgs();
+
+		// JVM args override any default and/or config values loaded from file
+		try {
+			config = configBuilderJvmArgs.build(configBuilderFile.build(config));
+		} catch (final DXRAMConfigBuilderException e) {
+			System.out.println("Bootstrapping configuration failed: " + e.getMessage());
+			System.exit(-1);
+		}
+
+		return config;
+	}
+
+	/**
+	 * Print all JVM args specified on startup
+	 */
+	private static void printJVMArgs() {
+		RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+		List<String> args = runtimeMxBean.getInputArguments();
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("JVM arguments: ");
+
+		for (String arg : args) {
+			builder.append(arg);
+			builder.append(' ');
+		}
+
+		System.out.println(builder);
+		System.out.println();
 	}
 }
