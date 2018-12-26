@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package science.atlarge.graphalytics.dxram.algorithms.lcc;
+
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Local Clustering Coefficient job implementation for Dxram. This class is responsible for formatting LCC-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Local Clustering Coefficient algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -36,14 +35,10 @@ public final class LocalClusteringCoefficientJob extends DxramJob {
 	public LocalClusteringCoefficientJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
 										 String inputPath, String outputPath) {
 		super(runSpecification, platformConfig, inputPath, outputPath);
-
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("lcc");
-
+	protected void run() throws Exception {
+		throw new UnsupportedOperationException("LCC not implemented");
 	}
 }

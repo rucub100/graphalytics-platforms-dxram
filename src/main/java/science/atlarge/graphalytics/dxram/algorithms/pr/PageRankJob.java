@@ -18,13 +18,11 @@ package science.atlarge.graphalytics.dxram.algorithms.pr;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.PageRankParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Page Rank job implementation for Dxram. This class is responsible for formatting PR-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Page Rank algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -49,16 +47,7 @@ public final class PageRankJob extends DxramJob {
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("pr");
-
-		commandLine.addArgument("--damping-factor", false);
-		commandLine.addArgument(String.valueOf(dampingFactor), false);
-
-		commandLine.addArgument("--max-iteration", false);
-		commandLine.addArgument(String.valueOf(iteration), false);
-
+	protected void run() throws Exception {
+		throw new UnsupportedOperationException("PR not implemented");
 	}
 }

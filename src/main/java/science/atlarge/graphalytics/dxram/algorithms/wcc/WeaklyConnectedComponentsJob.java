@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package science.atlarge.graphalytics.dxram.algorithms.wcc;
+
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Weakly Connected Components job implementation for Dxram. This class is responsible for formatting WCC-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Weakly Connected Components algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -40,9 +39,8 @@ public final class WeaklyConnectedComponentsJob extends DxramJob {
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("wcc");
+	protected void run() throws Exception {
+		throw new UnsupportedOperationException("WCC not implemented");
 	}
 
 }

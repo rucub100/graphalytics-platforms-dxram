@@ -18,13 +18,11 @@ package science.atlarge.graphalytics.dxram.algorithms.cdlp;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Community Detection job implementation for Dxram. This class is responsible for formatting CDLP-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Community Detection algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -47,13 +45,8 @@ public final class CommunityDetectionLPJob extends DxramJob {
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("cdlp");
-
-		commandLine.addArgument("--max-iteration", false);
-		commandLine.addArgument(String.valueOf(iteration), false);
+	protected void run() throws Exception {
+		throw new java.lang.UnsupportedOperationException("CDLP not implemented!");
 	}
 
 }

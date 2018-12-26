@@ -43,7 +43,6 @@ import science.atlarge.graphalytics.dxram.algorithms.lcc.LocalClusteringCoeffici
 import science.atlarge.graphalytics.dxram.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.dxram.algorithms.sssp.SingleSourceShortestPathsJob;
 import science.atlarge.graphalytics.dxram.algorithms.wcc.WeaklyConnectedComponentsJob;
-import java.nio.file.Paths;
 import java.util.List;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -64,67 +63,39 @@ public class DxramPlatform implements Platform {
 	protected static final Logger LOG = LogManager.getLogger();
 
 	public static final String PLATFORM_NAME = "dxram";
-	public DxramLoader loader;
 
-	public DxramPlatform() {
-	}
+	public DxramPlatform() {}
 
 	@Override
-	public void verifySetup() throws Exception {
-	}
+	public void verifySetup() throws Exception {}
 
 	@Override
 	public LoadedGraph loadGraph(FormattedGraph formattedGraph) throws Exception {
-		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
-		loader = new DxramLoader(formattedGraph, platformConfig);
-
-		LOG.info("Loading graph " + formattedGraph.getName());
-		Path loadedPath = Paths.get("./intermediate").resolve(formattedGraph.getName());
-
-		try {
-
-			int exitCode = loader.load(loadedPath.toString());
-			if (exitCode != 0) {
-				throw new PlatformExecutionException("Dxram exited with an error code: " + exitCode);
-			}
-		} catch (Exception e) {
-			throw new PlatformExecutionException("Failed to load a Dxram dataset.", e);
-		}
-		LOG.info("Loaded graph " + formattedGraph.getName());
-		return new LoadedGraph(formattedGraph, loadedPath.toString());
+		return new LoadedGraph(
+				formattedGraph,
+				formattedGraph.getVertexFilePath(),
+				formattedGraph.getEdgeFilePath());
 	}
 
 	@Override
-	public void deleteGraph(LoadedGraph loadedGraph) throws Exception {
-		LOG.info("Unloading graph " + loadedGraph.getFormattedGraph().getName());
-		try {
-
-			int exitCode = loader.unload(loadedGraph.getLoadedPath());
-			if (exitCode != 0) {
-				throw new PlatformExecutionException("Dxram exited with an error code: " + exitCode);
-			}
-		} catch (Exception e) {
-			throw new PlatformExecutionException("Failed to unload a Dxram dataset.", e);
-		}
-		LOG.info("Unloaded graph " + loadedGraph.getFormattedGraph().getName());
-	}
+	public void deleteGraph(LoadedGraph loadedGraph) throws Exception {}
 
 	@Override
-	public void prepare(RunSpecification runSpecification) throws Exception {
-
-	}
+	public void prepare(RunSpecification runSpecification) throws Exception {}
 
 	@Override
 	public void startup(RunSpecification runSpecification) throws Exception {
-		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
-		Path logDir = benchmarkRunSetup.getLogDir().resolve("platform").resolve("runner.logs");
-		DxramCollector.startPlatformLogging(logDir);
+		DxramCollector.startPlatformLogging(
+				runSpecification
+					.getBenchmarkRunSetup()
+					.getLogDir()
+					.resolve("platform")
+					.resolve("runner.logs"));
 		initDxram();
 	}
 
 	@Override
 	public void run(RunSpecification runSpecification) throws PlatformExecutionException {
-
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
 		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
 		RuntimeSetup runtimeSetup = runSpecification.getRuntimeSetup();
@@ -132,7 +103,10 @@ public class DxramPlatform implements Platform {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 		String inputPath = runtimeSetup.getLoadedGraph().getLoadedPath();
-		String outputPath = benchmarkRunSetup.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath()
+		String outputPath = benchmarkRunSetup
+				.getOutputDir()
+				.resolve(benchmarkRun.getName())
+				.toAbsolutePath()
 				.toString();
 
 		DxramJob job;
@@ -159,22 +133,21 @@ public class DxramPlatform implements Platform {
 			throw new PlatformExecutionException("Failed to load algorithm implementation.");
 		}
 
-		LOG.info("Executing benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
+		LOG.info(
+				"Executing benchmark with algorithm \"{}\" on graph \"{}\".",
+				benchmarkRun.getAlgorithm().getName(),
 				benchmarkRun.getFormattedGraph().getName());
 
 		try {
-
-			int exitCode = job.execute();
-			if (exitCode != 0) {
-				throw new PlatformExecutionException("Dxram exited with an error code: " + exitCode);
-			}
+			job.execute(jobService);
 		} catch (Exception e) {
 			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 		}
 
-		LOG.info("Executed benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
+		LOG.info(
+				"Executed benchmark with algorithm \"{}\" on graph \"{}\".",
+				benchmarkRun.getAlgorithm().getName(),
 				benchmarkRun.getFormattedGraph().getName());
-
 	}
 
 	@Override

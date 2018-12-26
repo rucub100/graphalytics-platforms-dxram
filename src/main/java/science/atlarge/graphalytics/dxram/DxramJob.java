@@ -18,17 +18,13 @@ package science.atlarge.graphalytics.dxram;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
-import org.apache.commons.exec.util.StringUtils;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.Executor;
-import org.apache.commons.exec.PumpStreamHandler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.io.IOException;
-import java.nio.file.Paths;
 
+import de.hhu.bsinfo.dxram.job.JobService;
+
+import java.io.IOException;
 
 /**
  * Base class for all jobs in the platform driver. Configures and executes a platform job using the parameters
@@ -40,8 +36,7 @@ public abstract class DxramJob {
 
 	private static final Logger LOG = LogManager.getLogger();
 
-	protected CommandLine commandLine;
-    private final String jobId;
+	private final String jobId;
 	private final String logPath;
 	private final String inputPath;
 	private final String outputPath;
@@ -70,6 +65,7 @@ public abstract class DxramJob {
 		this.platformConfig = platformConfig;
 	}
 
+	protected abstract void run() throws Exception;
 
 	/**
 	 * Executes the platform job with the pre-defined parameters.
@@ -77,88 +73,25 @@ public abstract class DxramJob {
 	 * @return the exit code
 	 * @throws IOException if the platform failed to run
 	 */
-	public int execute() throws Exception {
-		String executableDir = platformConfig.getExecutablePath();
-		commandLine = new CommandLine(Paths.get(executableDir).toFile());
-
-		// List of benchmark parameters.
-		String jobId = getJobId();
-		String logDir = getLogPath();
-
-		// List of dataset parameters.
-		String inputPath = getInputPath();
-		String outputPath = getOutputPath();
-
-		// List of platform parameters.
-		int numMachines = platformConfig.getNumMachines();
-		int numThreads = platformConfig.getNumThreads();
-		String homeDir = platformConfig.getHomePath();
-
-		appendBenchmarkParameters(jobId, logDir);
-		appendAlgorithmParameters();
-		appendDatasetParameters(inputPath, outputPath);
-		appendPlatformConfigurations(homeDir, numMachines, numThreads);
-
-		String commandString = StringUtils.toString(commandLine.toStrings(), " ");
-		LOG.info(String.format("Execute benchmark job with command-line: [%s]", commandString));
-
-		Executor executor = new DefaultExecutor();
-		executor.setStreamHandler(new PumpStreamHandler(System.out, System.err));
-		executor.setExitValue(0);
-		return executor.execute(commandLine);
+	public void execute(JobService jobService) throws Exception {
+		LOG.info("Execute benchmark job");
+		load(jobService);
+		run();
+		unload(jobService);
 	}
 
-
-	/**
-	 * Appends the benchmark-specific parameters for the executable to a CommandLine object.
-	 */
-	private void appendBenchmarkParameters(String jobId, String logPath) {
-
-		commandLine.addArgument("--job-id");
-		commandLine.addArgument(jobId);
-
-		commandLine.addArgument("--log-path");
-		commandLine.addArgument(logPath);
-
+	private void unload(JobService jobService) {
+		// TODO Auto-generated method stub
+		// push remote job to all storage nodes to drop all chunks
 	}
 
-	/**
-	 * Appends the dataset-specific parameters for the executable to a CommandLine object.
-	 */
-	private void appendDatasetParameters(String inputPath, String outputPath) {
-
-		commandLine.addArgument("--input-path");
-		commandLine.addArgument(Paths.get(inputPath).toString());
-
-		commandLine.addArgument("--output-path");
-		commandLine.addArgument(Paths.get(outputPath).toString());
-
+	private void load(JobService jobService) {
+		// TODO Auto-generated method stub
+		/**
+		 * Push remote job to all storage nodes for loading the graph into the chunk storage
+		 * First load whole graph on each node, later consider to partition/load only the relevant part?!
+		 */
 	}
-
-
-	/**
-	 * Appends the platform-specific parameters for the executable to a CommandLine object.
-	 */
-	private void appendPlatformConfigurations(String homeDir, int numMachines, int numThreads) {
-
-		if(homeDir != null && !homeDir.trim().isEmpty()) {
-			commandLine.addArgument("--home-dir");
-			commandLine.addArgument(homeDir);
-		}
-
-		commandLine.addArgument("--num-machines");
-		commandLine.addArgument(String.valueOf(numMachines));
-
-		commandLine.addArgument("--num-threads");
-		commandLine.addArgument(String.valueOf(numThreads));
-
-	}
-
-
-	/**
-	 * Appends the algorithm-specific parameters for the executable to a CommandLine object.
-	 */
-	protected abstract void appendAlgorithmParameters();
 
 	private String getJobId() {
 		return jobId;

@@ -18,13 +18,11 @@ package science.atlarge.graphalytics.dxram.algorithms.bfs;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Breadth-first Search job implementation for Dxram. This class is responsible for formatting BFS-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Breadth-first Search algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -47,12 +45,8 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("bfs");
-
-		commandLine.addArgument("--source-vertex", false);
-		commandLine.addArgument(String.valueOf(sourceVertex), false);
+	protected void run() throws Exception {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("BFS not implemented yet");
 	}
 }

@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 package science.atlarge.graphalytics.dxram.algorithms.sssp;
+
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
-import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
- * Single Source Shortest Paths job implementation for Dxram. This class is responsible for formatting SSSP-specific
- * arguments to be passed to the platform executable, and does not include the implementation of the algorithm.
+ * DXRAM implementation of the Single Source Shortest Paths algorithm.
  *
  * @author Ruslan Curbanov
  */
@@ -47,13 +46,8 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 	}
 
 	@Override
-	protected void appendAlgorithmParameters() {
-
-		commandLine.addArgument("--algorithm");
-		commandLine.addArgument("sssp");
-
-		commandLine.addArgument("--source-vertex", false);
-		commandLine.addArgument(String.valueOf(sourceVertex), false);
+	protected void run() throws Exception {
+		throw new UnsupportedOperationException("SSSP not implemented");
 	}
 
 }
