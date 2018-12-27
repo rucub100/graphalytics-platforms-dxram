@@ -21,10 +21,14 @@ import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nls.Capitalization;
 
+import de.hhu.bsinfo.dxram.boot.BootService;
 import de.hhu.bsinfo.dxram.job.JobService;
+import de.hhu.bsinfo.dxram.util.NodeCapabilities;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Base class for all jobs in the platform driver. Configures and executes a platform job using the parameters
@@ -73,24 +77,42 @@ public abstract class DxramJob {
 	 * @return the exit code
 	 * @throws IOException if the platform failed to run
 	 */
-	public void execute(JobService jobService) throws Exception {
+	public void execute(BootService bootService, JobService jobService) throws Exception {
 		LOG.info("Execute benchmark job");
-		load(jobService);
+
+		// get a list of all nodes for storage and computations
+		List<Short> storageAndComputeNodes = bootService
+				.getSupportingNodes(NodeCapabilities.STORAGE | NodeCapabilities.COMPUTE);
+		// exclude this node which controls the benchmark and coordinates the runs
+		storageAndComputeNodes.remove(bootService.getNodeID());
+
+		load(jobService, storageAndComputeNodes);
 		run();
-		unload(jobService);
+		unload(jobService, storageAndComputeNodes);
 	}
 
-	private void unload(JobService jobService) {
+	private void unload(JobService jobService, List<Short> storageAndComputeNodes) {
 		// TODO Auto-generated method stub
 		// push remote job to all storage nodes to drop all chunks
+
+		jobService.waitForAllJobsToFinish();
 	}
 
-	private void load(JobService jobService) {
+	private void load(JobService jobService, List<Short> storageAndComputeNodes) {
 		// TODO Auto-generated method stub
 		/**
 		 * Push remote job to all storage nodes for loading the graph into the chunk storage
 		 * First load whole graph on each node, later consider to partition/load only the relevant part?!
 		 */
+
+		// TODO: one instance per node for more control (e.g. partitioning parameters)
+		LoadGraphJob loadGraphJob = new LoadGraphJob();
+
+		for (Short nodeId : storageAndComputeNodes) {
+			jobService.pushJobRemote(loadGraphJob, nodeId);
+		}
+
+		jobService.waitForAllJobsToFinish();
 	}
 
 	private String getJobId() {

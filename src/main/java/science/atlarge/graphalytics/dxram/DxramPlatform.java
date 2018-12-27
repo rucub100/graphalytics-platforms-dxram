@@ -25,6 +25,7 @@ import de.hhu.bsinfo.dxram.engine.DXRAMConfig;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderException;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJVMArgs;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJsonFile2;
+import de.hhu.bsinfo.dxram.job.JobID;
 import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.Algorithm;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
@@ -92,6 +93,7 @@ public class DxramPlatform implements Platform {
 					.resolve("platform")
 					.resolve("runner.logs"));
 		initDxram();
+		registerJobTypes();
 	}
 
 	@Override
@@ -139,7 +141,7 @@ public class DxramPlatform implements Platform {
 				benchmarkRun.getFormattedGraph().getName());
 
 		try {
-			job.execute(jobService);
+			job.execute(bootService, jobService);
 		} catch (Exception e) {
 			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 		}
@@ -187,12 +189,21 @@ public class DxramPlatform implements Platform {
 
 		if (!dxram.initialize(config, true)) {
 			System.out.println("Initializing DXRAM failed.");
-			System.exit(-1);
+			System.exit(-1); // TODO: might be better to throw an exception here?
 		}
 
 		bootService = dxram.getService(BootService.class);
 		chunkService = dxram.getService(ChunkService.class);
 		jobService = dxram.getService(JobService.class);
+	}
+
+	/**
+	 * Register all job types.
+	 */
+	private void registerJobTypes() {
+		short jobTypeId = 0;
+
+		jobService.registerJobType(jobTypeId++, LoadGraphJob.class);
 	}
 
 	/**
