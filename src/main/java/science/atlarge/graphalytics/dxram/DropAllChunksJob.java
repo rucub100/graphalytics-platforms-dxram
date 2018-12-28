@@ -15,7 +15,6 @@
  */
 package science.atlarge.graphalytics.dxram;
 
-import de.hhu.bsinfo.dxram.chunk.ChunkAnonService;
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.job.AbstractJob;

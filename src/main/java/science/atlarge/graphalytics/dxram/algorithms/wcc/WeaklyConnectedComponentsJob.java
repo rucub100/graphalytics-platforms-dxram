@@ -22,9 +22,11 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
 /**
  * DXRAM implementation of the Weakly Connected Components algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
 public final class WeaklyConnectedComponentsJob extends DxramJob {
+
+	public static final short TYPE_ID = 15;
 
 	/**
 	 * Creates a new ConnectedComponentsJob object with all mandatory parameters specified.
@@ -32,15 +34,28 @@ public final class WeaklyConnectedComponentsJob extends DxramJob {
 	 * @param platformConfig the platform configuration.
 	 * @param inputPath the path to the input graph.
 	 */
-	public WeaklyConnectedComponentsJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
-										String inputPath, String outputPath) {
-		super(runSpecification, platformConfig, inputPath, outputPath);
+	public WeaklyConnectedComponentsJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
+		super(runSpecification, platformConfig);
+	}
 
+	@Override
+	public short getTypeID() {
+		return TYPE_ID;
 	}
 
 	@Override
 	protected void run() throws Exception {
 		throw new UnsupportedOperationException("WCC not implemented");
+	}
+
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		try {
+			execute();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

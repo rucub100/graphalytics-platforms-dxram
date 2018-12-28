@@ -18,15 +18,22 @@ package science.atlarge.graphalytics.dxram;
 import org.apache.commons.configuration.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import de.hhu.bsinfo.dxutils.serialization.Exportable;
+import de.hhu.bsinfo.dxutils.serialization.Exporter;
+import de.hhu.bsinfo.dxutils.serialization.Importable;
+import de.hhu.bsinfo.dxutils.serialization.Importer;
+import de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil;
+
 import science.atlarge.graphalytics.configuration.ConfigurationUtil;
 import science.atlarge.graphalytics.configuration.GraphalyticsExecutionException;
 
 /**
  * Collection of configurable platform options.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
-public final class DxramConfiguration {
+public final class DxramConfiguration implements Importable, Exportable {
 
 	protected static final Logger LOG = LogManager.getLogger();
 
@@ -120,6 +127,25 @@ public final class DxramConfiguration {
 		}
 
 		return platformConfig;
+	}
+
+	@Override
+	public int sizeofObject() {
+		return ObjectSizeUtil.sizeofString(this.homePath) + (2 * Integer.BYTES);
+	}
+
+	@Override
+	public void exportObject(Exporter p_exporter) {
+		p_exporter.writeString(this.homePath);
+		p_exporter.writeInt(this.numMachines);
+		p_exporter.writeInt(this.numThreads);
+	}
+
+	@Override
+	public void importObject(Importer p_importer) {
+		this.homePath = p_importer.readString(this.homePath);
+		this.numMachines = p_importer.readInt(this.numMachines);
+		this.numMachines = p_importer.readInt(this.numThreads);
 	}
 
 }

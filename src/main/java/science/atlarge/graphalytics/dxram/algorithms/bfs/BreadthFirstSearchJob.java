@@ -24,9 +24,11 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
 /**
  * DXRAM implementation of the Breadth-first Search algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
 public final class BreadthFirstSearchJob extends DxramJob {
+
+	public static final short TYPE_ID = 10;
 
 	private final long sourceVertex;
 
@@ -36,17 +38,31 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	 * @param platformConfig the platform configuration.
 	 * @param inputPath the path to the input graph.
 	 */
-	public BreadthFirstSearchJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
-								 String inputPath, String outputPath) {
-		super(runSpecification, platformConfig, inputPath, outputPath);
+	public BreadthFirstSearchJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
+		super(runSpecification, platformConfig);
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.sourceVertex = ((BreadthFirstSearchParameters)parameters).getSourceVertex();
 	}
 
 	@Override
+	public short getTypeID() {
+		return TYPE_ID;
+	}
+
+	@Override
 	protected void run() throws Exception {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("BFS not implemented yet");
+	}
+
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		try {
+			execute();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

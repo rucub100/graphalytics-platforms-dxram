@@ -24,9 +24,11 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
 /**
  * DXRAM implementation of the Single Source Shortest Paths algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
 public final class SingleSourceShortestPathsJob extends DxramJob {
+
+	public static final short TYPE_ID = 14;
 
 	private final long sourceVertex;
 
@@ -36,10 +38,8 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 	 * @param platformConfig the platform configuration.
 	 * @param inputPath the path to the input graph.
 	 */
-	public SingleSourceShortestPathsJob(RunSpecification runSpecification,
-										DxramConfiguration platformConfig,
-										String inputPath, String outputPath) {
-		super(runSpecification, platformConfig, inputPath, outputPath);
+	public SingleSourceShortestPathsJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
+		super(runSpecification, platformConfig);
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.sourceVertex = ((SingleSourceShortestPathsParameters)parameters).getSourceVertex();
@@ -48,6 +48,21 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 	@Override
 	protected void run() throws Exception {
 		throw new UnsupportedOperationException("SSSP not implemented");
+	}
+
+	@Override
+	public short getTypeID() {
+		return TYPE_ID;
+	}
+
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		try {
+			execute();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

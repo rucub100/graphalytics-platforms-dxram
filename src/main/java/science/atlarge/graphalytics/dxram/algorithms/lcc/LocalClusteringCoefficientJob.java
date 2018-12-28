@@ -22,23 +22,38 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
 /**
  * DXRAM implementation of the Local Clustering Coefficient algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
 public final class LocalClusteringCoefficientJob extends DxramJob {
 
+	public static final short TYPE_ID = 12;
 	/**
 	 * Creates a new ConnectedComponentsJob object with all mandatory parameters specified.
 	 *
 	 * @param platformConfig the platform configuration.
 	 * @param inputPath the path to the input graph.
 	 */
-	public LocalClusteringCoefficientJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
-										 String inputPath, String outputPath) {
-		super(runSpecification, platformConfig, inputPath, outputPath);
+	public LocalClusteringCoefficientJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
+		super(runSpecification, platformConfig);
+	}
+
+	@Override
+	public short getTypeID() {
+		return TYPE_ID;
 	}
 
 	@Override
 	protected void run() throws Exception {
 		throw new UnsupportedOperationException("LCC not implemented");
+	}
+
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		try {
+			execute();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

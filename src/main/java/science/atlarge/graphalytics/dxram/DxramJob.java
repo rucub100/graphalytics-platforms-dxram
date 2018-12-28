@@ -21,7 +21,6 @@ import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nls.Capitalization;
 
 import de.hhu.bsinfo.dxram.boot.BootService;
 import de.hhu.bsinfo.dxram.job.JobService;
@@ -34,18 +33,11 @@ import java.util.List;
  * Base class for all jobs in the platform driver. Configures and executes a platform job using the parameters
  * and executable specified by the subclass for a specific algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
-public abstract class DxramJob {
+public abstract class DxramJob extends GraphalyticsAbstractJob {
 
 	private static final Logger LOG = LogManager.getLogger();
-
-	private final String jobId;
-	private final String logPath;
-	private final String inputPath;
-	private final String outputPath;
-
-	protected final DxramConfiguration platformConfig;
 
 	/**
      * Initializes the platform job with its parameters.
@@ -54,17 +46,26 @@ public abstract class DxramJob {
 	 * @param inputPath the file path of the input graph dataset.
 	 * @param outputPath the file path of the output graph dataset.
 	 */
-	public DxramJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
-		String inputPath, String outputPath) {
+	public DxramJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
 
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
 		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
 
 		this.jobId = benchmarkRun.getId();
 		this.logPath = benchmarkRunSetup.getLogDir().resolve("platform").toString();
-
-		this.inputPath = inputPath;
-		this.outputPath = outputPath;
+		this.vertexPath = runSpecification
+			.getRuntimeSetup()
+			.getLoadedGraph()
+			.getVertexPath();
+		this.edgePath = runSpecification
+				.getRuntimeSetup()
+				.getLoadedGraph()
+				.getEdgePath();
+		this.outputPath = benchmarkRunSetup
+			.getOutputDir()
+			.resolve(benchmarkRun.getName())
+			.toAbsolutePath()
+			.toString();;
 
 		this.platformConfig = platformConfig;
 	}
@@ -77,8 +78,11 @@ public abstract class DxramJob {
 	 * @return the exit code
 	 * @throws IOException if the platform failed to run
 	 */
-	public void execute(BootService bootService, JobService jobService) throws Exception {
+	protected void execute() throws Exception {
 		LOG.info("Execute benchmark job");
+
+		BootService bootService = getService(BootService.class);
+		JobService jobService = getService(JobService.class);
 
 		// get a list of all nodes for storage and computations
 		List<Short> storageAndComputeNodes = bootService
@@ -105,7 +109,6 @@ public abstract class DxramJob {
 		 * First load whole graph on each node, later consider to partition/load only the relevant part?!
 		 */
 
-		// TODO: one instance per node for more control (e.g. partitioning parameters)
 		LoadGraphJob loadGraphJob = new LoadGraphJob();
 
 		for (Short nodeId : storageAndComputeNodes) {
@@ -114,21 +117,4 @@ public abstract class DxramJob {
 
 		jobService.waitForAllJobsToFinish();
 	}
-
-	private String getJobId() {
-		return jobId;
-	}
-
-	public String getLogPath() {
-		return logPath;
-	}
-
-	private String getInputPath() {
-		return inputPath;
-	}
-
-	private String getOutputPath() {
-		return outputPath;
-	}
-
 }

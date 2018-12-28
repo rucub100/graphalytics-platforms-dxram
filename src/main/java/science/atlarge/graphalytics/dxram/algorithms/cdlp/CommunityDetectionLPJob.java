@@ -24,9 +24,11 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
 /**
  * DXRAM implementation of the Community Detection algorithm.
  *
- * @author Ruslan Curbanov
+ * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  */
 public final class CommunityDetectionLPJob extends DxramJob {
+
+	public static final short TYPE_ID = 11;
 
 	private final long iteration;
 
@@ -36,17 +38,31 @@ public final class CommunityDetectionLPJob extends DxramJob {
 	 * @param platformConfig the platform configuration.
 	 * @param inputPath the path to the loaded graph.
 	 */
-	public CommunityDetectionLPJob(RunSpecification runSpecification, DxramConfiguration platformConfig,
-								   String inputPath, String outputPath) {
-		super(runSpecification, platformConfig, inputPath, outputPath);
+	public CommunityDetectionLPJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
+		super(runSpecification, platformConfig);
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.iteration = ((CommunityDetectionLPParameters)parameters).getMaxIterations();
 	}
 
 	@Override
+	public short getTypeID() {
+		return TYPE_ID;
+	}
+
+	@Override
 	protected void run() throws Exception {
 		throw new java.lang.UnsupportedOperationException("CDLP not implemented!");
+	}
+
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		try {
+			execute();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
