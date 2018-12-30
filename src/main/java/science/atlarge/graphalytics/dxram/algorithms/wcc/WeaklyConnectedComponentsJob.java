@@ -17,6 +17,10 @@ package science.atlarge.graphalytics.dxram.algorithms.wcc;
 
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.dxram.DxramJob;
+
+import java.util.List;
+
+import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
@@ -44,18 +48,17 @@ public final class WeaklyConnectedComponentsJob extends DxramJob {
 	}
 
 	@Override
-	protected void run() throws Exception {
+	protected void run() {
 		throw new UnsupportedOperationException("WCC not implemented");
 	}
 
 	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		try {
-			execute();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	protected void load(JobService jobService, List<Short> storageNodes) {
+		// TODO Auto-generated method stub
 	}
 
+	@Override
+	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		execute();
+	}
 }

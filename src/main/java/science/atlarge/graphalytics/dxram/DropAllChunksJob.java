@@ -25,7 +25,7 @@ import de.hhu.bsinfo.dxram.job.AbstractJob;
  */
 public class DropAllChunksJob extends AbstractJob {
 
-	public static final short TYPE_ID = 1;
+	public static final short TYPE_ID = 2;
 	
 	@Override
 	public short getTypeID() {

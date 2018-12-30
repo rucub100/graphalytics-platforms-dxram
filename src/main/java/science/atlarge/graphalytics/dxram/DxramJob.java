@@ -37,6 +37,8 @@ import java.util.List;
  */
 public abstract class DxramJob extends GraphalyticsAbstractJob {
 
+	public static final short TYPE_ID = 21;
+
 	private static final Logger LOG = LogManager.getLogger();
 
 	/**
@@ -70,51 +72,40 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		this.platformConfig = platformConfig;
 	}
 
-	protected abstract void run() throws Exception;
+	protected abstract void run();
+
+	protected abstract void load(JobService jobService, List<Short> storageNodes);
+
+	protected void unload(JobService jobService, List<Short> storageNodes) {
+		DropAllChunksJob dropAllChunksJob = new DropAllChunksJob();
+		
+		for (Short nodeId : storageNodes) {
+			jobService.pushJobRemote(dropAllChunksJob, nodeId);
+		}
+		
+		jobService.waitForAllJobsToFinish();
+	}
 
 	/**
 	 * Executes the platform job with the pre-defined parameters.
 	 *
-	 * @return the exit code
-	 * @throws IOException if the platform failed to run
 	 */
-	protected void execute() throws Exception {
+	protected void execute() {
 		LOG.info("Execute benchmark job");
 
 		BootService bootService = getService(BootService.class);
 		JobService jobService = getService(JobService.class);
 
 		// get a list of all nodes for storage and computations
-		List<Short> storageAndComputeNodes = bootService
-				.getSupportingNodes(NodeCapabilities.STORAGE | NodeCapabilities.COMPUTE);
+		List<Short> storageNodes = bootService
+				.getSupportingNodes(NodeCapabilities.STORAGE);
 		// exclude this node which controls the benchmark and coordinates the runs
-		storageAndComputeNodes.remove(bootService.getNodeID());
+		storageNodes.remove((Short)bootService.getNodeID());
 
-		load(jobService, storageAndComputeNodes);
+		load(jobService, storageNodes);
 		run();
-		unload(jobService, storageAndComputeNodes);
+		unload(jobService, storageNodes);
 	}
 
-	private void unload(JobService jobService, List<Short> storageAndComputeNodes) {
-		// TODO Auto-generated method stub
-		// push remote job to all storage nodes to drop all chunks
 
-		jobService.waitForAllJobsToFinish();
-	}
-
-	private void load(JobService jobService, List<Short> storageAndComputeNodes) {
-		// TODO Auto-generated method stub
-		/**
-		 * Push remote job to all storage nodes for loading the graph into the chunk storage
-		 * First load whole graph on each node, later consider to partition/load only the relevant part?!
-		 */
-
-		LoadGraphJob loadGraphJob = new LoadGraphJob();
-
-		for (Short nodeId : storageAndComputeNodes) {
-			jobService.pushJobRemote(loadGraphJob, nodeId);
-		}
-
-		jobService.waitForAllJobsToFinish();
-	}
 }

@@ -30,7 +30,7 @@ import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
  */
 public class LoadGraphJob extends GraphalyticsAbstractJob {
 
-	public static final short TYPE_ID = 0;
+	public static final short TYPE_ID = 1;
 
 	@Override
 	public short getTypeID() {

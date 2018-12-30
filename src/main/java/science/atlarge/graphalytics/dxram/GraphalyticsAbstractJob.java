@@ -26,6 +26,8 @@ import de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil;
  */
 public abstract class GraphalyticsAbstractJob extends AbstractJob {
 
+	public static final short TYPE_ID = 20;
+
 	protected String jobId;
 	protected String logPath;
 	protected String vertexPath;
