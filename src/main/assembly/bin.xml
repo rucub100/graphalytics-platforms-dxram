@@ -53,7 +53,9 @@
 			<outputDirectory>lib</outputDirectory>
 			<destName>${project.artifactId}-${project.version}-default.jar</destName>
 		</file>
+		<file><!--Graphalytics platform driver JAR (DXApp)--><source>${project.basedir}/target/${project.artifactId}-${project.version}.jar</source>
+			<outputDirectory>lib</outputDirectory>
+			<destName>${project.artifactId}-${project.version}-dxapp.jar</destName>
+		</file>
 	</files>
-
-
 </assembly>
