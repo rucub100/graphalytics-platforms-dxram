@@ -1,5 +1,6 @@
-/*
- * Copyright 2015 Delft University of Technology
+/* 
+ * Copyright (C) 2018 Heinrich-Heine-Universitaet Duesseldorf, 
+ * Institute of Computer Science, Department Operating Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,45 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package science.atlarge.graphalytics.dxram;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+package science.atlarge.graphalytics.dxram.job;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
+import de.hhu.bsinfo.dxram.job.AbstractJob;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  *
  */
-public class LoadGraphJob extends GraphalyticsAbstractJob {
+public class DropAllChunksJob extends AbstractJob {
 
-	public static final short TYPE_ID = 1;
-
+	public static final short TYPE_ID = 2;
+	
 	@Override
 	public short getTypeID() {
 		return TYPE_ID;
 	}
-
+	
 	@Override
 	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+		// TODO Auto-generated method stub
 		ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
-
-		// TODO create a graph chunk (set/list of vertices + set/list of edges)
-
-		try (Stream<String> stream = Files.lines(Paths.get(vertexPath), StandardCharsets.US_ASCII)) {
-			stream.forEach(new Consumer<String>() {
-				@Override
-				public void accept(String t) {
-					// TODO create chunk and add in graph
-				}
-			});
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		ChunkService chunkService = getService(ChunkService.class);
+		
+		// TODO remove all chunks
 	}
+
 }

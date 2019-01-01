@@ -1,5 +1,6 @@
-/*
- * Copyright 2015 Delft University of Technology
+/* 
+ * Copyright (C) 2018 Heinrich-Heine-Universitaet Duesseldorf, 
+ * Institute of Computer Science, Department Operating Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package science.atlarge.graphalytics.dxram;
+package science.atlarge.graphalytics.dxram.job;
 
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
+import science.atlarge.graphalytics.dxram.DxramConfiguration;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
 
@@ -99,6 +101,9 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		// get a list of all nodes for storage and computations
 		List<Short> storageNodes = bootService
 				.getSupportingNodes(NodeCapabilities.STORAGE);
+
+		// TODO if storageNodes < 1 => execException
+
 		// exclude this node which controls the benchmark and coordinates the runs
 		storageNodes.remove((Short)bootService.getNodeID());
 

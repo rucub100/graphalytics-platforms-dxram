@@ -21,8 +21,8 @@ import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.PageRankParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.job.DxramJob;
 
 /**
  * DXRAM implementation of the Page Rank algorithm.

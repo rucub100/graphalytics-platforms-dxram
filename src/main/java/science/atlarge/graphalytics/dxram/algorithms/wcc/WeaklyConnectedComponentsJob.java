@@ -16,12 +16,12 @@
 package science.atlarge.graphalytics.dxram.algorithms.wcc;
 
 import science.atlarge.graphalytics.execution.RunSpecification;
-import science.atlarge.graphalytics.dxram.DxramJob;
 
 import java.util.List;
 
 import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.job.DxramJob;
 
 /**
  * DXRAM implementation of the Weakly Connected Components algorithm.

@@ -1,5 +1,6 @@
-/*
- * Copyright 2015 Delft University of Technology
+/* 
+ * Copyright (C) 2018 Heinrich-Heine-Universitaet Duesseldorf, 
+ * Institute of Computer Science, Department Operating Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package science.atlarge.graphalytics.dxram;
+package science.atlarge.graphalytics.dxram.job;
 
 import de.hhu.bsinfo.dxram.job.AbstractJob;
 import de.hhu.bsinfo.dxutils.serialization.Exporter;
 import de.hhu.bsinfo.dxutils.serialization.Importer;
 import de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil;
+import science.atlarge.graphalytics.dxram.DxramConfiguration;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018

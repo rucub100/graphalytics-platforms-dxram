@@ -25,6 +25,7 @@ import de.hhu.bsinfo.dxram.engine.DXRAMConfig;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderException;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJVMArgs;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJsonFile2;
+import de.hhu.bsinfo.dxram.job.JobID;
 import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.Algorithm;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
@@ -37,12 +38,18 @@ import science.atlarge.graphalytics.execution.BenchmarkRunner;
 import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
 import science.atlarge.graphalytics.execution.RuntimeSetup;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
+import science.atlarge.graphalytics.dxram.algorithms.AlgorithmJobFactory;
 import science.atlarge.graphalytics.dxram.algorithms.bfs.BreadthFirstSearchJob;
 import science.atlarge.graphalytics.dxram.algorithms.cdlp.CommunityDetectionLPJob;
 import science.atlarge.graphalytics.dxram.algorithms.lcc.LocalClusteringCoefficientJob;
 import science.atlarge.graphalytics.dxram.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.dxram.algorithms.sssp.SingleSourceShortestPathsJob;
 import science.atlarge.graphalytics.dxram.algorithms.wcc.WeaklyConnectedComponentsJob;
+import science.atlarge.graphalytics.dxram.job.DropAllChunksJob;
+import science.atlarge.graphalytics.dxram.job.DxramJob;
+import science.atlarge.graphalytics.dxram.job.GraphalyticsAbstractJob;
+import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
+
 import java.util.List;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -98,39 +105,9 @@ public class DxramPlatform implements Platform {
 	@Override
 	public void run(RunSpecification runSpecification) throws PlatformExecutionException {
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
-
-		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 
-		DxramJob job;
-		switch (algorithm) {
-		case BFS:
-			job = new BreadthFirstSearchJob(runSpecification, platformConfig);
-			jobService.pushJob((BreadthFirstSearchJob)job);
-			break;
-		case CDLP:
-			job = new CommunityDetectionLPJob(runSpecification, platformConfig);
-			jobService.pushJob((CommunityDetectionLPJob)job);
-			break;
-		case LCC:
-			job = new LocalClusteringCoefficientJob(runSpecification, platformConfig);
-			jobService.pushJob((LocalClusteringCoefficientJob)job);
-			break;
-		case PR:
-			job = new PageRankJob(runSpecification, platformConfig);
-			jobService.pushJob((PageRankJob)job);
-			break;
-		case WCC:
-			job = new WeaklyConnectedComponentsJob(runSpecification, platformConfig);
-			jobService.pushJob((WeaklyConnectedComponentsJob)job);
-			break;
-		case SSSP:
-			job = new SingleSourceShortestPathsJob(runSpecification, platformConfig);
-			jobService.pushJob((SingleSourceShortestPathsJob)job);
-			break;
-		default:
-			throw new PlatformExecutionException("Failed to load algorithm implementation.");
-		}
+		DxramJob job = AlgorithmJobFactory.newJob(runSpecification, platformConfig);
 
 		LOG.info(
 				"Executing benchmark with algorithm \"{}\" on graph \"{}\".",
@@ -138,8 +115,14 @@ public class DxramPlatform implements Platform {
 				benchmarkRun.getFormattedGraph().getName());
 
 		try {
-			// TODO: this does not throw any exceptions, design an alternative approach
-			jobService.waitForLocalJobsToFinish();
+			if (jobService.pushJob(job) == JobID.INVALID_ID) {
+				throw new Exception(String.format("Invalid job id for %s", job));
+			}
+
+			if (!jobService.waitForLocalJobsToFinish()) {
+				throw new Exception("Failed waiting for local jobs to finish.");
+			}
+			// TODO if job.execException != null => throw execException
 		} catch (Exception e) {
 			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 		}

@@ -22,8 +22,8 @@ import java.util.List;
 import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
-import science.atlarge.graphalytics.dxram.DxramJob;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.job.DxramJob;
 
 /**
  * DXRAM implementation of the Single Source Shortest Paths algorithm.
