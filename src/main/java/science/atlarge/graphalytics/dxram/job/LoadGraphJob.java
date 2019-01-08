@@ -20,10 +20,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
+import science.atlarge.graphalytics.dxram.graph.BFSVertex;
+import science.atlarge.graphalytics.dxram.graph.Graph;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
@@ -40,19 +47,72 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 
 	@Override
 	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
+		final ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
+		final ChunkService chunkService = getService(ChunkService.class);
 
-		// TODO create a graph chunk (set/list of vertices + set/list of edges)
+		// prepare graph metadata for construction
+		final Graph graph = new Graph();
 
+		// read vertex file
+		final List<Long> vertexList = new ArrayList<Long>();
 		try (Stream<String> stream = Files.lines(Paths.get(vertexPath), StandardCharsets.US_ASCII)) {
 			stream.forEach(new Consumer<String>() {
 				@Override
-				public void accept(String t) {
-					// TODO create chunk and add in graph
+				public void accept(String line) {
+					String[] tmp = line.split("\\s");
+					long vertexId = Long.parseLong(tmp[0]);
+					vertexList.add(vertexId);
 				}
 			});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		// read edge file & build graph
+		try (Stream<String> stream = Files.lines(Paths.get(edgePath), StandardCharsets.US_ASCII)) {
+			final List<Long> vertexAndNeighbors = new ArrayList<Long>();
+			stream.sequential().forEach(new Consumer<String>() {
+				@Override
+				public void accept(String line) {
+					String[] tmp = line.split("\\s");
+					long srcId = Long.parseLong(tmp[0]);
+					long dstId = Long.parseLong(tmp[1]);
+
+					if (vertexAndNeighbors.isEmpty()) {
+						vertexAndNeighbors.add(srcId);
+						vertexAndNeighbors.add(dstId);
+					} else if (vertexAndNeighbors.contains(srcId)) {
+						vertexAndNeighbors.add(dstId);
+					} else {
+						final long vertexId = vertexAndNeighbors.remove(0);
+						vertexList.remove(vertexId);
+						BFSVertex bfsVertex = new BFSVertex(vertexId);
+						bfsVertex.setNeighbors(
+								ArrayUtils.toPrimitive(
+										vertexAndNeighbors.toArray(new Long[vertexAndNeighbors.size()])));
+						chunkLocalService.createLocal().create(bfsVertex);
+						chunkService.put().put(bfsVertex);
+						graph.putVertexCID(vertexId, bfsVertex.getID());
+						vertexAndNeighbors.clear();
+						vertexAndNeighbors.add(srcId);
+						vertexAndNeighbors.add(dstId);
+					}
+				}
+			});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// handle vertices without neighbors
+		for (long vertexId : vertexList) {
+			BFSVertex bfsVertex = new BFSVertex(vertexId);
+			chunkLocalService.createLocal().create(bfsVertex);
+			chunkService.put().put(bfsVertex);
+			graph.putVertexCID(vertexId, bfsVertex.getID());
+		}
+		vertexList.clear();
+
+		graph.build();
+		Graph.CONSTRUCTED_GRAPH = graph;
 	}
 }

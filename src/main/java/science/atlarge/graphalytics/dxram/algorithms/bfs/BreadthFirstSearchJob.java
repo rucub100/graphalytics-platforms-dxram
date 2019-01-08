@@ -15,9 +15,9 @@
  */
 package science.atlarge.graphalytics.dxram.algorithms.bfs;
 
-import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
@@ -32,6 +32,8 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
 public final class BreadthFirstSearchJob extends DxramJob {
 
 	public static final short TYPE_ID = 10;
+
+	private static final Logger LOG = LogManager.getLogger();
 
 	private final long sourceVertex;
 
@@ -55,13 +57,7 @@ public final class BreadthFirstSearchJob extends DxramJob {
 
 	@Override
 	protected void run() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("BFS not implemented yet");
-	}
-
-	@Override
-	protected void load(JobService jobService, List<Short> storageNodes) {
-		// TODO Auto-generated method stub
+		LOG.info("TODO: Implement distributed BFS algorithm...");
 	}
 
 	@Override

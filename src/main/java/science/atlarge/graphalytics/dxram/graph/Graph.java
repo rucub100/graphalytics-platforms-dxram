@@ -16,45 +16,62 @@
  */
 package science.atlarge.graphalytics.dxram.graph;
 
-import de.hhu.bsinfo.dxmem.data.AbstractChunk;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+
 import de.hhu.bsinfo.dxmem.data.ChunkID;
-import de.hhu.bsinfo.dxutils.serialization.Exporter;
-import de.hhu.bsinfo.dxutils.serialization.Importer;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, Jan 1, 2019
  *
  */
-public class Graph extends AbstractChunk{
+public class Graph {
 
-	/**
-	 * Graph page table with 65536 entries.
-	 * Map vertex id to CID.
-	 * 
-	 * 4 levels
-	 * |--------|--------|--------|--------|
-	 * |   16   |   16   |   16   |   16   |
-	 * |--------|--------|--------|--------|
-	 * |  head  |2nd lvl.|3rd lvl.|  CIDs  |
-	 * 
-	 */
-	long headId = ChunkID.INVALID_ID;
-	long[] vertices = null;
-	boolean constructed = false;
+	public static Graph CONSTRUCTED_GRAPH = null;
 
-	@Override
-	public void importObject(Importer p_importer) {
-		// TODO Auto-generated method stub
+	private final Map<Long, Long> vertexIdToCID = new HashMap<Long, Long>();
+	private boolean built = false;
+	private long[] vertices = null;
+
+	public long getVertexCID(int index) {
+		return this.vertices[index];
 	}
 
-	@Override
-	public void exportObject(Exporter p_exporter) {
-		// TODO Auto-generated method stub
+	public long getVertexCID(long vertexId) {
+		return vertexIdToCID.getOrDefault(vertexId, ChunkID.INVALID_ID);
 	}
 
-	@Override
-	public int sizeofObject() {
-		// TODO Auto-generated method stub
-		return 0;
+	public long[] getVertexCIDs() {
+		return this.vertices;
+	}
+
+	public void putVertexCID(long vertexId, long cid) {
+		if (!built) {
+			vertexIdToCID.put(vertexId, cid);
+		}
+	}
+
+	public void build() {
+		if (!built) {
+			built = true;
+			final long[] tmp_vertices = new long[this.vertexIdToCID.size()];
+			final AtomicInteger index = new AtomicInteger(0);
+			this.vertexIdToCID
+				.values()
+				.parallelStream()
+				.forEach(new Consumer<Long>() {
+					@Override
+					public void accept(Long cid) {
+						tmp_vertices[index.getAndIncrement()] = cid;
+					}
+				});
+			this.vertices = tmp_vertices;
+		}
+	}
+
+	public int getNumberOfVertices() {
+		return this.vertices.length;
 	}
 }

@@ -28,11 +28,28 @@ import de.hhu.bsinfo.dxutils.serialization.Importer;
  */
 public final class BFSVertex extends AbstractChunk {
 
-	private long id = -1;
-	private long depth = -1;
+	private long id;
+	private long depth;
 
 	// outgoing neighbors in case of directed graphs; all neighbors otherwise
-	private long[] neighbors = null;
+	private long[] neighbors;
+	private boolean hasNeighbors;
+
+	public BFSVertex(long vertexId) {
+		this.id = vertexId;
+		this.depth = -1;
+		this.neighbors = null;
+		this.hasNeighbors = false;
+	}
+
+	public long[] getNeighbors() {
+		return neighbors;
+	}
+
+	public void setNeighbors(long[] neighbors) {
+		this.neighbors = neighbors;
+		this.hasNeighbors = (this.neighbors != null && this.neighbors.length > 0);
+	}
 
 	@Override
 	public int sizeofObject() {
@@ -43,13 +60,21 @@ public final class BFSVertex extends AbstractChunk {
 	public void importObject(Importer p_importer) {
 		this.id = p_importer.readLong(this.id);
 		this.depth = p_importer.readLong(this.depth);
-		this.neighbors = p_importer.readLongArray(this.neighbors);
+		this.hasNeighbors = p_importer.readBoolean(this.hasNeighbors);
+		if (this.hasNeighbors) {
+			this.neighbors = p_importer.readLongArray(this.neighbors);			
+		}
 	}
 
 	@Override
 	public void exportObject(Exporter p_exporter) {
 		p_exporter.writeLong(this.id);
 		p_exporter.writeLong(this.depth);
-		p_exporter.writeLongArray(this.neighbors);
+		if (this.hasNeighbors) {
+			p_exporter.writeBoolean(true);
+			p_exporter.writeLongArray(this.neighbors);
+		} else {
+			p_exporter.writeBoolean(false);
+		}
 	}
 }

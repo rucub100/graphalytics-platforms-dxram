@@ -76,16 +76,24 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 
 	protected abstract void run();
 
-	protected abstract void load(JobService jobService, List<Short> storageNodes);
+	protected void load(JobService jobService, List<Short> storageNodes) {
+		LoadGraphJob loadGraphJob = new LoadGraphJob();
+
+		for (Short nodeId : storageNodes) {
+			jobService.pushJobRemote(loadGraphJob, nodeId);
+		}
+
+		jobService.waitForRemoteJobsToFinish();
+	}
 
 	protected void unload(JobService jobService, List<Short> storageNodes) {
 		DropAllChunksJob dropAllChunksJob = new DropAllChunksJob();
-		
+
 		for (Short nodeId : storageNodes) {
 			jobService.pushJobRemote(dropAllChunksJob, nodeId);
 		}
-		
-		jobService.waitForAllJobsToFinish();
+
+		jobService.waitForRemoteJobsToFinish();
 	}
 
 	/**
@@ -102,13 +110,18 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		List<Short> storageNodes = bootService
 				.getSupportingNodes(NodeCapabilities.STORAGE);
 
-		// TODO if storageNodes < 1 => execException
+		if (storageNodes.isEmpty()) {
+			LOG.error("No supporting (STORAGE) nodes found");
+		}
 
 		// exclude this node which controls the benchmark and coordinates the runs
 		storageNodes.remove((Short)bootService.getNodeID());
 
+		LOG.info("Load graph data from storage to the memory space (chunks)");
 		load(jobService, storageNodes);
+		LOG.info("Run the algorithm...");
 		run();
+		LOG.info("Remove graph data from the memory space (chunks)");
 		unload(jobService, storageNodes);
 	}
 

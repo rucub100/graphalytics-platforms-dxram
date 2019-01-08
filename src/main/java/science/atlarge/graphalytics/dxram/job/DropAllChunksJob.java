@@ -16,9 +16,9 @@
  */
 package science.atlarge.graphalytics.dxram.job;
 
-import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.job.AbstractJob;
+import science.atlarge.graphalytics.dxram.graph.Graph;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
@@ -27,19 +27,18 @@ import de.hhu.bsinfo.dxram.job.AbstractJob;
 public class DropAllChunksJob extends AbstractJob {
 
 	public static final short TYPE_ID = 2;
-	
+
 	@Override
 	public short getTypeID() {
 		return TYPE_ID;
 	}
-	
+
 	@Override
 	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		// TODO Auto-generated method stub
-		ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
 		ChunkService chunkService = getService(ChunkService.class);
-		
-		// TODO remove all chunks
+		chunkService.remove().remove(
+				Graph.CONSTRUCTED_GRAPH.getVertexCIDs(), 
+				0, 
+				Graph.CONSTRUCTED_GRAPH.getNumberOfVertices());
 	}
-
 }

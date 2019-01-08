@@ -59,11 +59,6 @@ public final class CommunityDetectionLPJob extends DxramJob {
 	}
 
 	@Override
-	protected void load(JobService jobService, List<Short> storageNodes) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	protected void execute(short p_nodeID, long[] p_chunkIDs) {
 		execute();
 	}
