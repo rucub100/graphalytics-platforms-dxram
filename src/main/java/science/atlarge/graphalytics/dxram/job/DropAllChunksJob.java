@@ -34,7 +34,7 @@ public class DropAllChunksJob extends AbstractJob {
 	}
 
 	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+	public void execute() {
 		ChunkService chunkService = getService(ChunkService.class);
 		chunkService.remove().remove(
 				Graph.CONSTRUCTED_GRAPH.getVertexCIDs(), 

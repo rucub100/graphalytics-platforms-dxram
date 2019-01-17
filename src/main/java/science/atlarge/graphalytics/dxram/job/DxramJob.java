@@ -100,7 +100,8 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 	 * Executes the platform job with the pre-defined parameters.
 	 *
 	 */
-	protected void execute() {
+	@Override
+	public void execute() {
 		LOG.info("Execute benchmark job");
 
 		BootService bootService = getService(BootService.class);

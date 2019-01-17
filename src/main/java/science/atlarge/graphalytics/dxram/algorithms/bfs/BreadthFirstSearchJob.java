@@ -59,9 +59,4 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	protected void run() {
 		LOG.info("TODO: Implement distributed BFS algorithm...");
 	}
-
-	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		execute();
-	}
 }

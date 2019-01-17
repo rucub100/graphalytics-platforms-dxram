@@ -17,9 +17,6 @@ package science.atlarge.graphalytics.dxram.algorithms.sssp;
 
 import science.atlarge.graphalytics.execution.RunSpecification;
 
-import java.util.List;
-
-import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
@@ -57,10 +54,5 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 	@Override
 	protected void run() {
 		throw new UnsupportedOperationException("SSSP not implemented");
-	}
-
-	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		execute();
 	}
 }

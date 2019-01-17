@@ -46,7 +46,7 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 	}
 
 	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
+	public void execute() {
 		final ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
 		final ChunkService chunkService = getService(ChunkService.class);
 

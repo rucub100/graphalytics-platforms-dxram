@@ -15,9 +15,6 @@
  */
 package science.atlarge.graphalytics.dxram.algorithms.pr;
 
-import java.util.List;
-
-import de.hhu.bsinfo.dxram.job.JobService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.PageRankParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
@@ -58,10 +55,5 @@ public final class PageRankJob extends DxramJob {
 	@Override
 	protected void run() {
 		throw new UnsupportedOperationException("PR not implemented");
-	}
-
-	@Override
-	protected void execute(short p_nodeID, long[] p_chunkIDs) {
-		execute();
 	}
 }
