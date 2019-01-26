@@ -1,0 +1,317 @@
+{
+  "m_engineConfig": {
+    "m_address": {
+      "m_ip": "127.0.0.1",
+      "m_port": 22222
+    },
+    "m_role": "Peer",
+    "m_jniPath": "jni"
+  },
+  "m_componentConfigs": {
+    "ChunkIndexComponent": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkIndexComponent"
+    },
+    "JobComponent": {
+      "m_enabled": true,
+      "m_numWorkers": 1,
+      "m_configClassName": "de.hhu.bsinfo.dxram.job.JobComponentConfig"
+    },
+    "NullComponent": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "NullComponent"
+    },
+    "MonitoringComponent": {
+      "m_monitoringActive": false,
+      "m_nic": "",
+      "m_disk": "",
+      "m_timeWindow": {
+        "m_value": 2000,
+        "m_unit": "ms"
+      },
+      "m_collectsPerWindow": 10,
+      "m_monitoringFolder": "./mon",
+      "m_csvTimeWindow": {
+        "m_value": 16000,
+        "m_unit": "ms"
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.monitoring.MonitoringComponentConfig"
+    },
+    "LookupComponent": {
+      "m_cachesEnabled": true,
+      "m_maxCacheEntries": 1000,
+      "m_cacheTtl": {
+        "m_value": 1000,
+        "m_unit": "ms"
+      },
+      "m_stabilizationBreakTime": {
+        "m_value": 1000,
+        "m_unit": "ms"
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.lookup.LookupComponentConfig"
+    },
+    "ApplicationComponent": {
+      "m_applicationPath": "dxapp",
+      "m_configClassName": "de.hhu.bsinfo.dxram.app.ApplicationComponentConfig"
+    },
+    "EventComponent": {
+      "m_threadCount": 1,
+      "m_configClassName": "de.hhu.bsinfo.dxram.event.EventComponentConfig"
+    },
+    "ChunkBackupComponent": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkBackupComponent"
+    },
+    "LogComponent": {
+      "m_dxlogConfig": {
+        "m_harddriveAccess": "dir",
+        "m_rawDevicePath": "/dev/raw/raw1",
+        "m_useChecksums": true,
+        "m_useTimestamps": false,
+        "m_flashPageSize": {
+          "m_value": 4096,
+          "m_unit": "b"
+        },
+        "m_logSegmentSize": {
+          "m_value": 8388608,
+          "m_unit": "b"
+        },
+        "m_primaryLogSize": {
+          "m_value": 268435456,
+          "m_unit": "b"
+        },
+        "m_writeBufferSize": {
+          "m_value": 33554432,
+          "m_unit": "b"
+        },
+        "m_secondaryLogBufferSize": {
+          "m_value": 131072,
+          "m_unit": "b"
+        },
+        "m_utilizationActivateReorganization": 60,
+        "m_utilizationPromptReorganization": 75,
+        "m_coldDataThresholdInSec": 9000
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.log.LogComponentConfig"
+    },
+    "ZookeeperBootComponent": {
+      "m_path": "/dxram",
+      "m_connection": {
+        "m_ip": "127.0.0.1",
+        "m_port": 2181
+      },
+      "m_timeout": {
+        "m_value": 10000,
+        "m_unit": "ms"
+      },
+      "m_bitfieldSize": {
+        "m_value": 2097152,
+        "m_unit": "b"
+      },
+      "m_rack": 0,
+      "m_switch": 0,
+      "m_isClient": false,
+      "m_configClassName": "de.hhu.bsinfo.dxram.boot.ZookeeperBootComponentConfig"
+    },
+    "FailureComponent": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "FailureComponent"
+    },
+    "NetworkComponent": {
+      "m_coreConfig": {
+        "m_numMessageHandlerThreads": 2,
+        "m_requestMapSize": 1048576,
+        "m_useStaticExporterPool": true,
+        "m_benchmarkMode": false,
+        "m_device": "ethernet"
+      },
+      "m_nioConfig": {
+        "m_maxConnections": 100,
+        "m_requestTimeOut": {
+          "m_value": 333,
+          "m_unit": "ms"
+        },
+        "m_connectionTimeOut": {
+          "m_value": 333,
+          "m_unit": "ms"
+        },
+        "m_flowControlWindow": {
+          "m_value": 524288,
+          "m_unit": "b"
+        },
+        "m_flowControlWindowThreshold": 0.8,
+        "m_outgoingRingBufferSize": {
+          "m_value": 2097152,
+          "m_unit": "b"
+        }
+      },
+      "m_ibConfig": {
+        "m_maxConnections": 100,
+        "m_connectionCreationTimeout": {
+          "m_value": 5000,
+          "m_unit": "ms"
+        },
+        "m_requestTimeOut": {
+          "m_value": 100,
+          "m_unit": "ms"
+        },
+        "m_flowControlWindow": {
+          "m_value": 16777216,
+          "m_unit": "b"
+        },
+        "m_flowControlWindowThreshold": 0.1,
+        "m_outgoingRingBufferSize": {
+          "m_value": 4194304,
+          "m_unit": "b"
+        },
+        "m_ibqMaxCapacityBufferCount": 8192,
+        "m_ibqMaxCapacitySize": {
+          "m_value": 67108864,
+          "m_unit": "b"
+        },
+        "m_incomingBufferSize": {
+          "m_value": 32768,
+          "m_unit": "b"
+        },
+        "m_incomingBufferPoolTotalSize": {
+          "m_value": 2147483648,
+          "m_unit": "b"
+        },
+        "m_sqSize": 20,
+        "m_srqSize": 2000,
+        "m_sharedSCQSize": 2000,
+        "m_sharedRCQSize": 2000,
+        "m_maxSGEs": 4,
+        "m_enableSignalHandler": false,
+        "m_pinSendRecvThreads": false,
+        "m_statisticsThreadPrintIntervalMs": 0
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.net.NetworkComponentConfig"
+    },
+    "BackupComponent": {
+      "m_backupActive": false,
+      "m_availableForBackup": true,
+      "m_backupDirectory": "./log/",
+      "m_backupRangeSize": {
+        "m_value": 268435456,
+        "m_unit": "b"
+      },
+      "m_replicationFactor": 3,
+      "m_backupPlacementStrategy": "Random",
+      "m_disjunctiveFirstBackupPeer": true,
+      "m_rackAware": false,
+      "m_switchAware": false,
+      "m_configClassName": "de.hhu.bsinfo.dxram.backup.BackupComponentConfig"
+    },
+    "ChunkMigrationComponent": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkMigrationComponent"
+    },
+    "NameserviceComponent": {
+      "m_type": "NAME",
+      "m_nameserviceCacheEntries": 1000000,
+      "m_configClassName": "de.hhu.bsinfo.dxram.nameservice.NameserviceComponentConfig"
+    },
+    "ChunkComponent": {
+      "m_keyValueStoreSize": {
+        "m_value": 134217728,
+        "m_unit": "b"
+      },
+      "m_memDumpFolderOnError": "",
+      "m_chunkLockDisabled": false,
+      "m_chunkStorageEnabled": true,
+      "m_configClassName": "de.hhu.bsinfo.dxram.chunk.ChunkComponentConfig"
+    }
+  },
+  "m_serviceConfigs": {
+    "StatisticsService": {
+      "m_printStatsPeriodMs": 0,
+      "m_configClassName": "de.hhu.bsinfo.dxram.stats.StatisticsServiceConfig"
+    },
+    "TemporaryStorageService": {
+      "m_storageMaxNumEntries": 1000,
+      "m_storageMaxSize": {
+        "m_value": 33554432,
+        "m_unit": "b"
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.tmp.TemporaryStorageServiceConfig"
+    },
+    "RecoveryService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "RecoveryService"
+    },
+    "MigrationService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "MigrationService"
+    },
+    "JobService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "JobService"
+    },
+    "ChunkService": {
+      "m_removerQueueSize": 100000,
+      "m_configClassName": "de.hhu.bsinfo.dxram.chunk.ChunkServiceConfig"
+    },
+    "ChunkLocalService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkLocalService"
+    },
+    "SynchronizationService": {
+      "m_maxBarriersPerSuperpeer": 1000,
+      "m_configClassName": "de.hhu.bsinfo.dxram.sync.SynchronizationServiceConfig"
+    },
+    "LookupService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "LookupService"
+    },
+    "NameserviceService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "NameserviceService"
+    },
+    "NullService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "NullService"
+    },
+    "ChunkAnonService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkAnonService"
+    },
+    "NetworkService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "NetworkService"
+    },
+    "LoggerService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "LoggerService"
+    },
+    "ChunkDebugService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "ChunkDebugService"
+    },
+    "MasterSlaveComputeService": {
+      "m_role": "none",
+      "m_computeGroupId": 0,
+      "m_pingInterval": {
+        "m_value": 1000,
+        "m_unit": "ms"
+      },
+      "m_configClassName": "de.hhu.bsinfo.dxram.ms.MasterSlaveComputeServiceConfig"
+    },
+    "BootService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "BootService"
+    },
+    "MonitoringService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "MonitoringService"
+    },
+    "LogService": {
+      "m_configClassName": "de.hhu.bsinfo.dxram.engine.DXRAMModuleConfig",
+      "m_moduleClassName": "LogService"
+    },
+    "ApplicationService": {
+      "m_autoStart": [],
+      "m_configClassName": "de.hhu.bsinfo.dxram.app.ApplicationServiceConfig"
+    }
+  }
+}
