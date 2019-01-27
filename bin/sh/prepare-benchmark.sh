@@ -33,3 +33,10 @@ if [ -z $PLATFORM_HOME ]; then
     exit 1
 fi
 
+# Prepare java_opts (DEFAULT_JVM_OPTS, JAVA_OPTS, DXRAM_OPTS) for the BenchmarkRunner
+DEFAULT_JVM_OPTS="-Dlog4j.configurationFile=file:$config/log4j2.xml"
+echo $DEFAULT_JVM_OPTS > $config/.runner.javaopts
+echo $JAVA_OPTS >> $config/.runner.javaopts
+echo $DXRAM_OPTS >> $config/.runner.javaopts
+export java_opts="$DEFAULT_JVM_OPTS $DXRAM_OPTS"
+
