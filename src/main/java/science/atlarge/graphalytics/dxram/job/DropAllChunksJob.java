@@ -28,6 +28,9 @@ public class DropAllChunksJob extends GraphalyticsAbstractJob {
 
 	public static final short TYPE_ID = 2;
 
+	// Needed to be serializable/deserializable?
+	public DropAllChunksJob() { }
+	
 	public DropAllChunksJob(
 			String jobId,
 			String logPath,

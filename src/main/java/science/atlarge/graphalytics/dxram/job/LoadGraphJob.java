@@ -42,6 +42,9 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 
 	public static final short TYPE_ID = 1;
 
+	// Needed to be serializable/deserializable?
+	public LoadGraphJob() { }
+
 	public LoadGraphJob(
 			String jobId,
 			String logPath,

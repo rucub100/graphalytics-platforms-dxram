@@ -27,6 +27,11 @@ import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJVMArgs;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJsonFile2;
 import de.hhu.bsinfo.dxram.job.JobID;
 import de.hhu.bsinfo.dxram.job.JobService;
+import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
+import de.hhu.bsinfo.dxram.ms.TaskListener;
+import de.hhu.bsinfo.dxram.ms.TaskScript;
+import de.hhu.bsinfo.dxram.ms.TaskScriptState;
+import de.hhu.bsinfo.dxram.ms.tasks.PrintTask;
 import science.atlarge.graphalytics.domain.algorithms.Algorithm;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
@@ -51,6 +56,7 @@ import science.atlarge.graphalytics.dxram.job.GraphalyticsAbstractJob;
 import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.file.Path;
@@ -107,30 +113,61 @@ public class DxramPlatform implements Platform {
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 
-		DxramJob job = AlgorithmJobFactory.newJob(runSpecification, platformConfig);
+		if (true) {
+			PrintTask printTask = new PrintTask("Hello MS-Service");
+			TaskScript script = new TaskScript((short)2, (short)0, printTask);
+			final AtomicBoolean completed = new AtomicBoolean(false);
+			TaskListener p_listener = new TaskListener() {
+				@Override
+				public void taskCompleted(TaskScriptState p_taskScriptState) {
+					LOG.info("==========taskCompleted==========");
+					completed.set(true);
+				}
 
-		LOG.info(
-				"Executing benchmark with algorithm \"{}\" on graph \"{}\".",
-				benchmarkRun.getAlgorithm().getName(),
-				benchmarkRun.getFormattedGraph().getName());
-
-		try {
-			if (jobService.pushJob(job) == JobID.INVALID_ID) {
-				throw new Exception(String.format("Invalid job id for %s", job));
+				@Override
+				public void taskBeforeExecution(TaskScriptState p_taskScriptState) {
+					LOG.info("==========taskBeforeExecution==========");
+				}
+			};
+			
+			dxram.getService(MasterSlaveComputeService.class).submitTaskScript(script, (short)0, p_listener);
+			while (true) {
+				// run
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// ignore
+				}
+				if (completed.get()) {
+					break;
+				}
 			}
-
-			if (!jobService.waitForLocalJobsToFinish()) {
-				throw new Exception("Failed waiting for local jobs to finish.");
+		} else {
+			DxramJob job = AlgorithmJobFactory.newJob(runSpecification, platformConfig);
+			
+			LOG.info(
+					"Executing benchmark with algorithm \"{}\" on graph \"{}\".",
+					benchmarkRun.getAlgorithm().getName(),
+					benchmarkRun.getFormattedGraph().getName());
+			
+			try {
+				if (jobService.pushJob(job) == JobID.INVALID_ID) {
+					throw new Exception(String.format("Invalid job id for %s", job));
+				}
+				
+				if (!jobService.waitForLocalJobsToFinish()) {
+					throw new Exception("Failed waiting for local jobs to finish.");
+				}
+				// TODO if job.execException != null => throw execException
+			} catch (Exception e) {
+				throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 			}
-			// TODO if job.execException != null => throw execException
-		} catch (Exception e) {
-			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
+			
+			LOG.info(
+					"Executed benchmark with algorithm \"{}\" on graph \"{}\".",
+					benchmarkRun.getAlgorithm().getName(),
+					benchmarkRun.getFormattedGraph().getName());			
 		}
-
-		LOG.info(
-				"Executed benchmark with algorithm \"{}\" on graph \"{}\".",
-				benchmarkRun.getAlgorithm().getName(),
-				benchmarkRun.getFormattedGraph().getName());
 	}
 
 	@Override
