@@ -57,6 +57,6 @@ public final class BreadthFirstSearchJob extends DxramJob {
 
 	@Override
 	protected void run() {
-		LOG.info("TODO: Implement distributed BFS algorithm...");
+		LOG.error("TODO: Implement distributed BFS algorithm...");
 	}
 }

@@ -26,9 +26,11 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
+import science.atlarge.graphalytics.dxram.DxramConfiguration;
 import science.atlarge.graphalytics.dxram.graph.BFSVertex;
 import science.atlarge.graphalytics.dxram.graph.Graph;
 
@@ -40,6 +42,16 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 
 	public static final short TYPE_ID = 1;
 
+	public LoadGraphJob(
+			String jobId,
+			String logPath,
+			String vertexPath,
+			String edgePath,
+			String outputPath,
+			DxramConfiguration platformConfig) {
+		super(jobId, logPath, vertexPath, edgePath, outputPath, platformConfig);
+	}
+	
 	@Override
 	public short getTypeID() {
 		return TYPE_ID;

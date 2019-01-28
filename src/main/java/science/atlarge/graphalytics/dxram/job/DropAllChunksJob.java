@@ -17,16 +17,26 @@
 package science.atlarge.graphalytics.dxram.job;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
-import de.hhu.bsinfo.dxram.job.AbstractJob;
+import science.atlarge.graphalytics.dxram.DxramConfiguration;
 import science.atlarge.graphalytics.dxram.graph.Graph;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  *
  */
-public class DropAllChunksJob extends AbstractJob {
+public class DropAllChunksJob extends GraphalyticsAbstractJob {
 
 	public static final short TYPE_ID = 2;
+
+	public DropAllChunksJob(
+			String jobId,
+			String logPath,
+			String vertexPath,
+			String edgePath,
+			String outputPath,
+			DxramConfiguration platformConfig) {
+		super(jobId, logPath, vertexPath, edgePath, outputPath, platformConfig);
+	}
 
 	@Override
 	public short getTypeID() {

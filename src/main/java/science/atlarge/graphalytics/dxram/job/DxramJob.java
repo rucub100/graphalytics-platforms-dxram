@@ -26,6 +26,8 @@ import org.apache.logging.log4j.Logger;
 
 import de.hhu.bsinfo.dxram.boot.BootService;
 import de.hhu.bsinfo.dxram.job.JobService;
+import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
+import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService.StatusMaster;
 import de.hhu.bsinfo.dxram.util.NodeCapabilities;
 
 import java.io.IOException;
@@ -77,23 +79,55 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 	protected abstract void run();
 
 	protected void load(JobService jobService, List<Short> storageNodes) {
-		LoadGraphJob loadGraphJob = new LoadGraphJob();
+		LOG.info(String.format(
+				"Create load graph job: id=%s, log-path=%s, vertex-path=%s, edge-path=%s, output-path=%s",
+				this.jobId,
+				this.logPath,
+				this.vertexPath,
+				this.edgePath,
+				this.outputPath));
+		LoadGraphJob loadGraphJob = new LoadGraphJob(
+				this.jobId,
+				this.logPath,
+				this.vertexPath,
+				this.edgePath,
+				this.outputPath,
+				this.platformConfig);
 
 		for (Short nodeId : storageNodes) {
+			LOG.info(String.format("Push load graph job to remote node %d...", nodeId));
 			jobService.pushJobRemote(loadGraphJob, nodeId);
 		}
 
+		LOG.info("Wait for all remote graph loading jobs to finish...");
 		jobService.waitForRemoteJobsToFinish();
+		LOG.info("All remote graph loading jobs finished");
 	}
 
 	protected void unload(JobService jobService, List<Short> storageNodes) {
-		DropAllChunksJob dropAllChunksJob = new DropAllChunksJob();
+		LOG.info(String.format(
+				"Create unload graph job: id=%s, log-path=%s, vertex-path=%s, edge-path=%s, output-path=%s",
+				this.jobId,
+				this.logPath,
+				this.vertexPath,
+				this.edgePath,
+				this.outputPath));
+		DropAllChunksJob dropAllChunksJob = new DropAllChunksJob(
+				this.jobId,
+				this.logPath,
+				this.vertexPath,
+				this.edgePath,
+				this.outputPath,
+				this.platformConfig);
 
 		for (Short nodeId : storageNodes) {
+			LOG.info(String.format("Push unload graph job to remote node %d...", nodeId));
 			jobService.pushJobRemote(dropAllChunksJob, nodeId);
 		}
 
+		LOG.info("Wait for all remote graph unloading jobs to finish...");
 		jobService.waitForRemoteJobsToFinish();
+		LOG.info("All remote graph unloading jobs finished");
 	}
 
 	/**
@@ -102,21 +136,44 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 	 */
 	@Override
 	public void execute() {
-		LOG.info("Execute benchmark job");
+		LOG.info(String.format("Execute benchmark job %s", this.jobId));
 
 		BootService bootService = getService(BootService.class);
 		JobService jobService = getService(JobService.class);
+		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
 
 		// get a list of all nodes for storage and computations
 		List<Short> storageNodes = bootService
 				.getSupportingNodes(NodeCapabilities.STORAGE);
+		LOG.info(String.format("Found %d nodes with STORAGE capability support:", storageNodes.size()));
+		
+		StatusMaster stat = ms.getStatusMaster((short)0);
+		for (short node : storageNodes) {
+			String ms_role = "none";
+			if (stat.getMasterNodeId() == node) {
+				ms_role = "master";
+			} else if (stat.getConnectedSlaves().contains(node)) {
+				ms_role = "slave";
+			}
+			LOG.info(String.format(
+					"Node %d, %s, addr=%s, [MS-role=%s]",
+					node,
+					bootService.getNodeRole(node).toString(),
+					bootService.getNodeAddress(node).toString(),
+					ms_role));
+		}
 
 		if (storageNodes.isEmpty()) {
 			LOG.error("No supporting (STORAGE) nodes found");
 		}
 
 		// exclude this node which controls the benchmark and coordinates the runs
+		LOG.info(String.format("Exclude node [%d] which controls the benchmark", bootService.getNodeID()));
 		storageNodes.remove((Short)bootService.getNodeID());
+		// exclude MS compute master
+		LOG.info(String.format("Exclude MS master node [%d]", stat.getMasterNodeId()));
+		storageNodes.remove((Short)stat.getMasterNodeId());
+		LOG.info(String.format("Slave nodes left for computation: %d", storageNodes.size()));
 
 		LOG.info("Load graph data from storage to the memory space (chunks)");
 		load(jobService, storageNodes);

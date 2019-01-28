@@ -25,6 +25,17 @@ import de.hhu.bsinfo.dxram.engine.DXRAMConfig;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderException;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJVMArgs;
 import de.hhu.bsinfo.dxram.engine.DXRAMConfigBuilderJsonFile2;
+import de.hhu.bsinfo.dxram.job.JobService;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.BreadthFirstSearchJob;
+import science.atlarge.graphalytics.dxram.algorithms.cdlp.CommunityDetectionLPJob;
+import science.atlarge.graphalytics.dxram.algorithms.lcc.LocalClusteringCoefficientJob;
+import science.atlarge.graphalytics.dxram.algorithms.pr.PageRankJob;
+import science.atlarge.graphalytics.dxram.algorithms.sssp.SingleSourceShortestPathsJob;
+import science.atlarge.graphalytics.dxram.algorithms.wcc.WeaklyConnectedComponentsJob;
+import science.atlarge.graphalytics.dxram.job.DropAllChunksJob;
+import science.atlarge.graphalytics.dxram.job.DxramJob;
+import science.atlarge.graphalytics.dxram.job.GraphalyticsAbstractJob;
+import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
 
 /**
  * Main entry point for running a standalone DXRAM instance.
@@ -53,6 +64,8 @@ public final class DXRAMMain {
             System.out.println("Initializing DXRAM failed.");
             System.exit(-1);
         }
+        
+        registerJobTypes(dxram);
 
         while (dxram.update()) {
             // run
@@ -60,6 +73,31 @@ public final class DXRAMMain {
 
         System.exit(0);
     }
+    
+    /**
+	 * Register all job types.
+	 * 
+	 * @param p_dxram DXRAM instance
+	 */
+	private static void registerJobTypes(final DXRAM p_dxram) {
+		final JobService jobService = p_dxram.getService(JobService.class);
+
+		// abstract types
+		jobService.registerJobType(GraphalyticsAbstractJob.TYPE_ID, GraphalyticsAbstractJob.class);
+		jobService.registerJobType(DxramJob.TYPE_ID, DxramJob.class);
+
+		// load and unload
+		jobService.registerJobType(LoadGraphJob.TYPE_ID, LoadGraphJob.class);
+		jobService.registerJobType(DropAllChunksJob.TYPE_ID, DropAllChunksJob.class);
+
+		// algorithms
+		jobService.registerJobType(BreadthFirstSearchJob.TYPE_ID, BreadthFirstSearchJob.class);
+		jobService.registerJobType(CommunityDetectionLPJob.TYPE_ID, CommunityDetectionLPJob.class);
+		jobService.registerJobType(LocalClusteringCoefficientJob.TYPE_ID, LocalClusteringCoefficientJob.class);
+		jobService.registerJobType(PageRankJob.TYPE_ID, PageRankJob.class);
+		jobService.registerJobType(SingleSourceShortestPathsJob.TYPE_ID, SingleSourceShortestPathsJob.class);
+		jobService.registerJobType(WeaklyConnectedComponentsJob.TYPE_ID, WeaklyConnectedComponentsJob.class);
+	}
 
     /**
      * Bootstrap configuration loading/creation

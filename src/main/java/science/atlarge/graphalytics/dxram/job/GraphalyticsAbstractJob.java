@@ -38,6 +38,23 @@ public abstract class GraphalyticsAbstractJob extends AbstractJob {
 
 	protected DxramConfiguration platformConfig;
 
+	public GraphalyticsAbstractJob() {}
+	
+	public GraphalyticsAbstractJob(
+			String jobId,
+			String logPath,
+			String vertexPath,
+			String edgePath,
+			String outputPath,
+			DxramConfiguration platformConfig) {
+		this.jobId = jobId;
+		this.logPath = logPath;
+		this.vertexPath = vertexPath;
+		this.edgePath = edgePath;
+		this.outputPath = outputPath;
+		this.platformConfig = platformConfig;
+	}
+	
 	@Override
 	public int sizeofObject() {
 		return ObjectSizeUtil.sizeofString(this.jobId) +
