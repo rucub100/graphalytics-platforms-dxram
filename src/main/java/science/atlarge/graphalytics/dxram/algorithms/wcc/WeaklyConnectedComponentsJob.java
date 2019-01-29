@@ -46,6 +46,6 @@ public final class WeaklyConnectedComponentsJob extends DxramJob {
 
 	@Override
 	protected void run() {
-		throw new UnsupportedOperationException("WCC not implemented");
+		System.err.println("WCC not implemented");
 	}
 }

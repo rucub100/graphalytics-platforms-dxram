@@ -113,7 +113,7 @@ public class DxramPlatform implements Platform {
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 
-		if (true) {
+		if (false) {
 			PrintTask printTask = new PrintTask("Hello MS-Service");
 			TaskScript script = new TaskScript((short)2, (short)0, printTask);
 			final AtomicBoolean completed = new AtomicBoolean(false);
@@ -129,7 +129,7 @@ public class DxramPlatform implements Platform {
 					LOG.info("==========taskBeforeExecution==========");
 				}
 			};
-			
+
 			dxram.getService(MasterSlaveComputeService.class).submitTaskScript(script, (short)0, p_listener);
 			while (true) {
 				// run

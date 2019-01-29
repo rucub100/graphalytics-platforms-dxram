@@ -53,6 +53,6 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 
 	@Override
 	protected void run() {
-		throw new UnsupportedOperationException("SSSP not implemented");
+		System.err.println("SSSP not implemented");
 	}
 }
