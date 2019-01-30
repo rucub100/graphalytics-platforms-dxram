@@ -27,23 +27,23 @@ import com.google.gson.annotations.Expose;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.hhu.bsinfo.dxgraph.DXGraphMessageTypes;
-import de.hhu.bsinfo.dxgraph.algo.bfs.front.ConcurrentBitVectorHybrid;
-import de.hhu.bsinfo.dxgraph.algo.bfs.messages.BFSMessages;
-import de.hhu.bsinfo.dxgraph.algo.bfs.messages.BFSResultMessage;
-import de.hhu.bsinfo.dxgraph.algo.bfs.messages.BFSTerminateMessage;
-import de.hhu.bsinfo.dxgraph.algo.bfs.messages.PingMessage;
-import de.hhu.bsinfo.dxgraph.algo.bfs.messages.VerticesForNextFrontierMessage;
-import de.hhu.bsinfo.dxgraph.data.BFSResult;
-import de.hhu.bsinfo.dxgraph.data.GraphPartitionIndex;
-import de.hhu.bsinfo.dxgraph.data.GraphRootList;
-import de.hhu.bsinfo.dxgraph.data.VertexSimple;
-import de.hhu.bsinfo.dxgraph.load.GraphLoadBFSRootListTask;
-import de.hhu.bsinfo.dxgraph.load.GraphLoadPartitionIndexTask;
+import science.atlarge.graphalytics.dxram.graph.DXGraphMessageTypes;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.front.ConcurrentBitVectorHybrid;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.BFSMessages;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.BFSResultMessage;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.BFSTerminateMessage;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.PingMessage;
+import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.VerticesForNextFrontierMessage;
+import science.atlarge.graphalytics.dxram.graph.data.BFSResult;
+import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
+import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
+import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
+
 import de.hhu.bsinfo.dxram.boot.BootService;
-import de.hhu.bsinfo.dxram.chunk.ChunkMemoryService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
-import de.hhu.bsinfo.dxram.data.ChunkID;
+import de.hhu.bsinfo.dxmem.data.ChunkID;
 import de.hhu.bsinfo.dxram.lookup.overlay.storage.BarrierID;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
@@ -90,7 +90,6 @@ public class GraphAlgorithmBFSTask implements Task {
 
     private TaskContext m_ctx;
     private ChunkService m_chunkService;
-    private ChunkMemoryService m_chunkMemoryService;
     private NameserviceService m_nameserviceService;
     private NetworkService m_networkService;
     private BootService m_bootService;
@@ -150,7 +149,8 @@ public class GraphAlgorithmBFSTask implements Task {
     public int execute(final TaskContext p_ctx) {
         m_ctx = p_ctx;
         m_chunkService = m_ctx.getDXRAMServiceAccessor().getService(ChunkService.class);
-        m_chunkMemoryService = m_ctx.getDXRAMServiceAccessor().getService(ChunkMemoryService.class);
+        // TODO(RC): ChunkMemoryService -> ChunkService (no direct mem [transpiler API])
+        //m_chunkMemoryService = m_ctx.getDXRAMServiceAccessor().getService(ChunkMemoryService.class);
         m_nameserviceService = m_ctx.getDXRAMServiceAccessor().getService(NameserviceService.class);
         m_networkService = m_ctx.getDXRAMServiceAccessor().getService(NetworkService.class);
         m_bootService = m_ctx.getDXRAMServiceAccessor().getService(BootService.class);
