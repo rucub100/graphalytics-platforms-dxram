@@ -22,13 +22,14 @@ import com.google.gson.annotations.Expose;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.hhu.bsinfo.dxgraph.data.GraphPartitionIndex;
-import de.hhu.bsinfo.dxgraph.data.VertexSimple;
-import de.hhu.bsinfo.dxgraph.load.oel.OrderedEdgeList;
-import de.hhu.bsinfo.dxgraph.load.oel.OrderedEdgeListBinaryFileThreadBuffering;
+import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeList;
+import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeListBinaryFileThreadBuffering;
+import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
-import de.hhu.bsinfo.dxram.data.ChunkID;
-import de.hhu.bsinfo.dxram.data.DataStructure;
+import de.hhu.bsinfo.dxmem.data.ChunkID;
+import de.hhu.bsinfo.dxmem.data.AbstractChunk;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
 import de.hhu.bsinfo.dxram.ms.TaskContext;
@@ -57,6 +58,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
 
     private TaskContext m_ctx;
     private ChunkService m_chunkService;
+    private ChunkLocalService m_chunkLocalService;
 
     /**
      * Default constructor
@@ -113,6 +115,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
     public int execute(final TaskContext p_ctx) {
         m_ctx = p_ctx;
         m_chunkService = m_ctx.getDXRAMServiceAccessor().getService(ChunkService.class);
+        m_chunkLocalService = m_ctx.getDXRAMServiceAccessor().getService(ChunkLocalService.class);
         TemporaryStorageService temporaryStorageService = m_ctx.getDXRAMServiceAccessor().getService(TemporaryStorageService.class);
         NameserviceService nameserviceService = m_ctx.getDXRAMServiceAccessor().getService(NameserviceService.class);
 
@@ -146,7 +149,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
         }
 
         // #if LOGGER >= INFO
-        LOGGER.info("Chunkservice status BEFORE load:\n%s", m_chunkService.getStatus());
+        LOGGER.info("Chunkservice status BEFORE load:\n%s", m_chunkService.status().getStatus());
         // #endif /* LOGGER >= INFO */
 
         if (!loadGraphPartition(graphPartitionOel, graphPartitionIndex)) {
@@ -157,7 +160,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
         }
 
         // #if LOGGER >= INFO
-        LOGGER.info("Chunkservice status AFTER load:\n%s", m_chunkService.getStatus());
+        LOGGER.info("Chunkservice status AFTER load:\n%s", m_chunkService.status().getStatus());
         // #endif /* LOGGER >= INFO */
 
         return 0;
@@ -349,9 +352,9 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 vertexBuffer = Arrays.copyOf(vertexBuffer, readCount);
             }
 
-            m_chunkService.create((DataStructure[]) vertexBuffer);
+            m_chunkLocalService.createLocal().create((AbstractChunk[]) vertexBuffer);
 
-            int count = m_chunkService.put((DataStructure[]) vertexBuffer);
+            int count = m_chunkService.put().put((AbstractChunk[]) vertexBuffer);
             if (count != readCount) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Putting vertex data for chunks failed: %d != %d", count, readCount);

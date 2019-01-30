@@ -1,6 +1,6 @@
 package science.atlarge.graphalytics.dxram.algorithms.bfs.interfaces;
 
-import de.hhu.bsinfo.dxgraph.data.Edge;
+import science.atlarge.graphalytics.dxram.graph.data.Edge;
 
 public interface TraversalEdgeCallback {
     // return false to terminate the traversal (because result found, error, ...), true to continue

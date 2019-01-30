@@ -481,7 +481,7 @@ public class GraphAlgorithmBFSTask implements Task {
                 // #endif /* LOGGER >= INFO */
 
                 VertexSimple vertex = new VertexSimple(p_entryVertex);
-                if (m_chunkService.get(vertex) != 1) {
+                if (!m_chunkService.get().get(vertex)) {
                     LOGGER.error("Getting root vertex 0x%X failed", p_entryVertex);
                     // signal all other slaves to terminate (error)
                     m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);

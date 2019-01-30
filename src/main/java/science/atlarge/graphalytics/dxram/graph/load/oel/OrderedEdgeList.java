@@ -13,7 +13,7 @@
 
 package science.atlarge.graphalytics.dxram.graph.load.oel;
 
-import de.hhu.bsinfo.dxgraph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
 
 /**
  * Interface for an ordered edge list providing vertices.

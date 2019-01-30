@@ -21,11 +21,11 @@ import com.google.gson.annotations.Expose;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.hhu.bsinfo.dxgraph.data.GraphPartitionIndex;
-import de.hhu.bsinfo.dxgraph.data.GraphRootList;
-import de.hhu.bsinfo.dxgraph.load.oel.OrderedEdgeListRoots;
-import de.hhu.bsinfo.dxgraph.load.oel.OrderedEdgeListRootsBinaryFile;
-import de.hhu.bsinfo.dxram.data.ChunkID;
+import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
+import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
+import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeListRoots;
+import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeListRootsBinaryFile;
+import de.hhu.bsinfo.dxmem.data.ChunkID;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
 import de.hhu.bsinfo.dxram.ms.TaskContext;

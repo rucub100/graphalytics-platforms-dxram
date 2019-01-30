@@ -41,7 +41,7 @@ public class BitVectorReentrantLock {
 
     public static void main(final String[] p_args) throws Exception {
         final int vecSize = 10000000;
-        BitVectorReentrantLock vec = new BitVectorReentrantLock(vecSize);
+        final BitVectorReentrantLock vec = new BitVectorReentrantLock(vecSize);
 
         Thread[] threads = new Thread[24];
         while (true) {
@@ -70,7 +70,7 @@ public class BitVectorReentrantLock {
             System.out.println("Total elements: " + vec.size());
             System.out.println("Empty...");
 
-            AtomicLong sum = new AtomicLong(0);
+            final AtomicLong sum = new AtomicLong(0);
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread() {
                     private long m_count;

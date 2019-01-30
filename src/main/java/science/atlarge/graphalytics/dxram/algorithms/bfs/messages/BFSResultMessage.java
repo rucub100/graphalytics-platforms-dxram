@@ -13,8 +13,8 @@
 
 package science.atlarge.graphalytics.dxram.algorithms.bfs.messages;
 
-import de.hhu.bsinfo.dxgraph.DXGraphMessageTypes;
-import de.hhu.bsinfo.dxgraph.data.BFSResult;
+import science.atlarge.graphalytics.dxram.graph.DXGraphMessageTypes;
+import science.atlarge.graphalytics.dxram.graph.data.BFSResult;
 import de.hhu.bsinfo.dxnet.core.Message;
 import de.hhu.bsinfo.dxnet.core.AbstractMessageExporter;
 import de.hhu.bsinfo.dxnet.core.AbstractMessageImporter;

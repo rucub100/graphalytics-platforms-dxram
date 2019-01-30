@@ -20,7 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import de.hhu.bsinfo.dxgraph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
 
 /**
  * Implementation reading vertex data from a buffer filled by a separate file reading thread.

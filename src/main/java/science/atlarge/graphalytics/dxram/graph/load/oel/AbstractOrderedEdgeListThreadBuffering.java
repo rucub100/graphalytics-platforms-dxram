@@ -15,7 +15,7 @@ package science.atlarge.graphalytics.dxram.graph.load.oel;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import de.hhu.bsinfo.dxgraph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
 
 /**
  * Base class running a buffered reader of vertex data in a separate thread to speed up loading.
