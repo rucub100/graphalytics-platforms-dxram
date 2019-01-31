@@ -42,8 +42,10 @@ import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
 
 import de.hhu.bsinfo.dxram.boot.BootService;
+import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxmem.data.ChunkID;
+import de.hhu.bsinfo.dxmem.data.ChunkLockOperation;
 import de.hhu.bsinfo.dxram.lookup.overlay.storage.BarrierID;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
@@ -90,6 +92,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
     private TaskContext m_ctx;
     private ChunkService m_chunkService;
+    private ChunkLocalService m_chunkLocalService;
     private NameserviceService m_nameserviceService;
     private NetworkService m_networkService;
     private BootService m_bootService;
@@ -149,8 +152,7 @@ public class GraphAlgorithmBFSTask implements Task {
     public int execute(final TaskContext p_ctx) {
         m_ctx = p_ctx;
         m_chunkService = m_ctx.getDXRAMServiceAccessor().getService(ChunkService.class);
-        // TODO(RC): ChunkMemoryService -> ChunkService (no direct mem [transpiler API])
-        //m_chunkMemoryService = m_ctx.getDXRAMServiceAccessor().getService(ChunkMemoryService.class);
+        m_chunkLocalService = m_ctx.getDXRAMServiceAccessor().getService(ChunkLocalService.class);
         m_nameserviceService = m_ctx.getDXRAMServiceAccessor().getService(NameserviceService.class);
         m_networkService = m_ctx.getDXRAMServiceAccessor().getService(NetworkService.class);
         m_bootService = m_ctx.getDXRAMServiceAccessor().getService(BootService.class);
@@ -491,7 +493,9 @@ public class GraphAlgorithmBFSTask implements Task {
                 // mark root visited
                 if (m_markVisited) {
                     // mark data mode
-                    if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
+                	vertex.setUserData(m_bfsLocalResult.m_totalBFSDepth);
+                    //if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
+                    if (!m_chunkService.put().put(vertex)) {
                         LOGGER.error("Marking root vertex 0x%X failed", p_entryVertex);
                         m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
                         return;
@@ -810,13 +814,15 @@ public class GraphAlgorithmBFSTask implements Task {
                     long localId = ChunkID.getLocalID(vertexId);
                     if (m_visitedFrontier.pushBack(localId)) {
                         m_nextFrontier.pushBack(localId);
-
+                        
+                        VertexSimple vertex = new VertexSimple(vertexId);
+                        m_chunkService.get().get(vertex);
                         if (m_markVisited) {
-                            m_chunkMemoryService.writeInt(vertexId, 0, m_bfsLocalResult.m_totalBFSDepth);
+                        	vertex.setUserData(m_bfsLocalResult.m_totalBFSDepth);
                         }
 
                         // read num of edges for calculating bottom up <-> top down switching formula
-                        int numEdges = m_chunkMemoryService.readInt(vertexId, 4);
+                        int numEdges = vertex.getNeighbours().length;
                         if (numEdges != -1) {
                             m_edgeCountNextFrontier.addAndGet(numEdges);
                         } else {
@@ -1240,7 +1246,8 @@ public class GraphAlgorithmBFSTask implements Task {
 
                 // --------------------------------------------------
 
-                int gett = m_chunkService.getLocal(m_vertexBatch, 0, validVertsInBatch);
+                // TODO(RC): What lock operation is necessary?
+                int gett = m_chunkLocalService.getLocal().get(0, validVertsInBatch, ChunkLockOperation.NONE, m_vertexBatch);
                 if (gett != validVertsInBatch) {
                     // #if LOGGER >= ERROR
                     LOGGER.error("Error on getting vertices in BFS Thread %d: %d != %d", m_id, gett, validVertsInBatch);
@@ -1337,7 +1344,8 @@ public class GraphAlgorithmBFSTask implements Task {
                                         // read num of edges for calculating bottom up <-> top down switching formula
                                         m_edgeCountNextFrontier.addAndGet(neighbours.length);
 
-                                        if (m_markVertices && !m_chunkMemoryService.writeInt(vertex.getID(), 0, m_currentDepthLevel)) {
+                                        vertex.setUserData(m_currentDepthLevel);
+                                        if (m_markVertices && !m_chunkService.put().put(vertex)) {
                                             LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
                                         }
 
@@ -1384,12 +1392,15 @@ public class GraphAlgorithmBFSTask implements Task {
                                 if (m_visitedFrontier.pushBack(neighborLocalId)) {
                                     m_nextFrontier.pushBack(neighborLocalId);
 
-                                    if (m_markVertices && !m_chunkMemoryService.writeInt(neighbour, 0, m_currentDepthLevel)) {
+                                    VertexSimple neighbour_vertex = new VertexSimple(neighbour);
+                                    m_chunkService.get().get(neighbour_vertex);
+                                    neighbour_vertex.setUserData(m_currentDepthLevel);
+                                    if (m_markVertices && !m_chunkService.put().put(neighbour_vertex)) {
                                         LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
                                     }
 
                                     // read num of edges for calculating bottom up <-> top down switching formula
-                                    int numEdges = m_chunkMemoryService.readInt(neighbour, 4);
+                                    int numEdges = neighbour_vertex.getNeighbours().length;
                                     if (numEdges != -1) {
                                         m_edgeCountNextFrontier.addAndGet(numEdges);
                                     } else {
