@@ -259,13 +259,28 @@
 			</releases>
 			<id>graphalytics</id>
 			<name>Graphalytics</name>
-			<url>http://graphalytics.site/maven</url>
+			<url>https://atlarge.ewi.tudelft.nl/graphalytics/mvn</url>
 			<layout>default</layout>
 		</repository>
 		<repository>
-			<id>dxram-repo</id>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</releases>
+			<id>dxram-repo-releases</id>
 			<name>DXRAM Bintray Repository</name>
 			<url>https://dl.bintray.com/hhu-bsinfo/dxram</url>
+		</repository>
+		<repository>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>dxram-repo-snapshots</id>
+			<name>DXRAM JFrog Artifactory</name>
+			<url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
 		</repository>
 	</repositories>
 </project>
