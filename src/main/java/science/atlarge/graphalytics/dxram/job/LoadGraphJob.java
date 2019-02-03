@@ -26,7 +26,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
@@ -39,6 +40,7 @@ import science.atlarge.graphalytics.dxram.graph.Graph;
  *
  */
 public class LoadGraphJob extends GraphalyticsAbstractJob {
+	private static final Logger LOGGER = LogManager.getFormatterLogger(LoadGraphJob.class.getSimpleName());
 
 	public static final short TYPE_ID = 1;
 
@@ -65,9 +67,11 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 		final ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
 		final ChunkService chunkService = getService(ChunkService.class);
 
+		LOGGER.info("Construct a graph");
 		// prepare graph metadata for construction
 		final Graph graph = new Graph();
 
+		LOGGER.info(String.format("Read the vertex file: %s", vertexPath));
 		// read vertex file
 		final List<Long> vertexList = new ArrayList<Long>();
 		try (Stream<String> stream = Files.lines(Paths.get(vertexPath), StandardCharsets.US_ASCII)) {
@@ -81,8 +85,10 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 			});
 		} catch (IOException e) {
 			e.printStackTrace();
+			LOGGER.error("IOException: " + e.getMessage());
 		}
 
+		LOGGER.info(String.format("Read edge file [%s] and build the graph", edgePath));
 		// read edge file & build graph
 		try (Stream<String> stream = Files.lines(Paths.get(edgePath), StandardCharsets.US_ASCII)) {
 			final List<Long> vertexAndNeighbors = new ArrayList<Long>();
@@ -116,8 +122,10 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 			});
 		} catch (IOException e) {
 			e.printStackTrace();
+			LOGGER.error("IOException: " + e.getMessage());
 		}
 
+		LOGGER.info("Handle vertices without neighbors");
 		// handle vertices without neighbors
 		for (long vertexId : vertexList) {
 			BFSVertex bfsVertex = new BFSVertex(vertexId);
@@ -127,7 +135,9 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 		}
 		vertexList.clear();
 
+		LOGGER.error("Build the graph");
 		graph.build();
 		Graph.CONSTRUCTED_GRAPH = graph;
+		LOGGER.info(String.format("Graph: %d vertices", graph.getNumberOfVertices()));
 	}
 }

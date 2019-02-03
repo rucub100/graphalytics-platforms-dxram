@@ -30,7 +30,6 @@ import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
 import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService.StatusMaster;
 import de.hhu.bsinfo.dxram.util.NodeCapabilities;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

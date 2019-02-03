@@ -16,6 +16,9 @@
  */
 package science.atlarge.graphalytics.dxram.job;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 import science.atlarge.graphalytics.dxram.graph.Graph;
@@ -25,12 +28,13 @@ import science.atlarge.graphalytics.dxram.graph.Graph;
  *
  */
 public class DropAllChunksJob extends GraphalyticsAbstractJob {
+	private static final Logger LOGGER = LogManager.getFormatterLogger(DropAllChunksJob.class.getSimpleName());
 
 	public static final short TYPE_ID = 2;
 
 	// Needed to be serializable/deserializable?
 	public DropAllChunksJob() { }
-	
+
 	public DropAllChunksJob(
 			String jobId,
 			String logPath,
@@ -49,9 +53,10 @@ public class DropAllChunksJob extends GraphalyticsAbstractJob {
 	@Override
 	public void execute() {
 		ChunkService chunkService = getService(ChunkService.class);
+		LOGGER.info("Cleanup: remove all vertices from constructed graph");
 		chunkService.remove().remove(
-				Graph.CONSTRUCTED_GRAPH.getVertexCIDs(), 
-				0, 
+				Graph.CONSTRUCTED_GRAPH.getVertexCIDs(),
+				0,
 				Graph.CONSTRUCTED_GRAPH.getNumberOfVertices());
 	}
 }
