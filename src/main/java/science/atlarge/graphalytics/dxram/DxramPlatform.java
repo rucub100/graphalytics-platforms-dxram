@@ -32,7 +32,6 @@ import de.hhu.bsinfo.dxram.ms.TaskListener;
 import de.hhu.bsinfo.dxram.ms.TaskScript;
 import de.hhu.bsinfo.dxram.ms.TaskScriptState;
 import de.hhu.bsinfo.dxram.ms.tasks.PrintTask;
-import science.atlarge.graphalytics.domain.algorithms.Algorithm;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
 import science.atlarge.graphalytics.domain.graph.LoadedGraph;
@@ -41,7 +40,6 @@ import science.atlarge.graphalytics.execution.PlatformExecutionException;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.execution.BenchmarkRunner;
 import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
-import science.atlarge.graphalytics.execution.RuntimeSetup;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.dxram.algorithms.AlgorithmJobFactory;
 import science.atlarge.graphalytics.dxram.algorithms.bfs.BreadthFirstSearchJob;
@@ -69,8 +67,6 @@ import java.nio.file.Path;
 public class DxramPlatform implements Platform {
 
 	private static DXRAM dxram;
-	private static BootService bootService;
-	private static ChunkService chunkService;
 	private static JobService jobService;
 
 	protected static final Logger LOG = LogManager.getLogger();
@@ -113,61 +109,26 @@ public class DxramPlatform implements Platform {
 		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
 		DxramConfiguration platformConfig = DxramConfiguration.parsePropertiesFile();
 
-		if (false) {
-			PrintTask printTask = new PrintTask("Hello MS-Service");
-			TaskScript script = new TaskScript((short)2, (short)0, printTask);
-			final AtomicBoolean completed = new AtomicBoolean(false);
-			TaskListener p_listener = new TaskListener() {
-				@Override
-				public void taskCompleted(TaskScriptState p_taskScriptState) {
-					LOG.info("==========taskCompleted==========");
-					completed.set(true);
-				}
+		DxramJob job = AlgorithmJobFactory.newJob(runSpecification, platformConfig);
 
-				@Override
-				public void taskBeforeExecution(TaskScriptState p_taskScriptState) {
-					LOG.info("==========taskBeforeExecution==========");
-				}
-			};
+		LOG.info("Executing benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
+				benchmarkRun.getFormattedGraph().getName());
 
-			dxram.getService(MasterSlaveComputeService.class).submitTaskScript(script, (short)0, p_listener);
-			while (true) {
-				// run
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// ignore
-				}
-				if (completed.get()) {
-					break;
-				}
+		try {
+			if (jobService.pushJob(job) == JobID.INVALID_ID) {
+				throw new Exception(String.format("Invalid job id for %s", job));
 			}
-		} else {
-			DxramJob job = AlgorithmJobFactory.newJob(runSpecification, platformConfig);
-			
-			LOG.info(
-					"Executing benchmark with algorithm \"{}\" on graph \"{}\".",
-					benchmarkRun.getAlgorithm().getName(),
-					benchmarkRun.getFormattedGraph().getName());
-			
-			try {
-				if (jobService.pushJob(job) == JobID.INVALID_ID) {
-					throw new Exception(String.format("Invalid job id for %s", job));
-				}
-				
-				if (!jobService.waitForLocalJobsToFinish()) {
-					throw new Exception("Failed waiting for local jobs to finish.");
-				}
-				// TODO if job.execException != null => throw execException
-			} catch (Exception e) {
-				throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
+
+			if (!jobService.waitForLocalJobsToFinish()) {
+				throw new Exception("Failed waiting for local jobs to finish.");
 			}
-			
-			LOG.info(
-					"Executed benchmark with algorithm \"{}\" on graph \"{}\".",
-					benchmarkRun.getAlgorithm().getName(),
-					benchmarkRun.getFormattedGraph().getName());			
+			// TODO if job.execException != null => throw execException
+		} catch (Exception e) {
+			throw new PlatformExecutionException("Failed to execute a Dxram job.", e);
 		}
+
+		LOG.info("Executed benchmark with algorithm \"{}\" on graph \"{}\".", benchmarkRun.getAlgorithm().getName(),
+				benchmarkRun.getFormattedGraph().getName());
 	}
 
 	@Override
@@ -210,8 +171,6 @@ public class DxramPlatform implements Platform {
 			System.exit(-1); // TODO: might be better to throw an exception here?
 		}
 
-		bootService = dxram.getService(BootService.class);
-		chunkService = dxram.getService(ChunkService.class);
 		jobService = dxram.getService(JobService.class);
 	}
 

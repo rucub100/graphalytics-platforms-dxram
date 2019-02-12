@@ -138,7 +138,7 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		LOG.info(String.format("Execute benchmark job %s", this.jobId));
 
 		BootService bootService = getService(BootService.class);
-		JobService jobService = getService(JobService.class);
+		//JobService jobService = getService(JobService.class);
 		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
 
 		// get a list of all nodes for storage and computations
@@ -175,11 +175,12 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		LOG.info(String.format("Slave nodes left for computation: %d", storageNodes.size()));
 
 		LOG.info("Load graph data from storage to the memory space (chunks)");
-		load(jobService, storageNodes);
+		// TODO: job service is broken, first test BFS locally
+		// load(jobService, storageNodes);
 		LOG.info("Run the algorithm...");
 		run();
 		LOG.info("Remove graph data from the memory space (chunks)");
-		unload(jobService, storageNodes);
+		// TODO: unload(jobService, storageNodes);
 	}
 
 

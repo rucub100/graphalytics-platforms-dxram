@@ -18,6 +18,9 @@ package science.atlarge.graphalytics.dxram.algorithms.bfs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
+import de.hhu.bsinfo.dxram.ms.TaskScript;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
@@ -36,6 +39,7 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	private static final Logger LOG = LogManager.getLogger();
 
 	private final long sourceVertex;
+	private GraphAlgorithmBFSTask bfsTask;
 
 	/**
 	 * Creates a new BreadthFirstSearchJob object with all mandatory parameters specified.
@@ -55,8 +59,23 @@ public final class BreadthFirstSearchJob extends DxramJob {
 		return TYPE_ID;
 	}
 
+	private void submitBFSTask() {
+		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
+		bfsTask = new GraphAlgorithmBFSTask();
+		TaskScript taskScript = new TaskScript(bfsTask);
+		ms.submitTaskScript(taskScript, (short)0);
+	}
+
 	@Override
 	protected void run() {
 		LOG.error("TODO: Implement distributed BFS algorithm...");
+		// reserve local ids (CIDs)
+		ChunkLocalService cls = getService(ChunkLocalService.class);
+		cls.reserveLocal().reserve(500000000);
+		// TODO: load graph into runner DXRAM instance
+		// define runner as slave to run the task locally (debugging)
+		// run the BFSTask
+		submitBFSTask();
+		// gather the results and create "expected" output
 	}
 }
