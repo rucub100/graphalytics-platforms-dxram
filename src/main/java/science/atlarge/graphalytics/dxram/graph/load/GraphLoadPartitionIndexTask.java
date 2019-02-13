@@ -102,7 +102,7 @@ public class GraphLoadPartitionIndexTask implements Task {
 
             graphPartIndex.setID(tmpStorage.generateStorageId(MS_PART_INDEX_IDENT + p_ctx.getCtxData().getComputeGroupId()));
 
-            // store the index for our current cLompute group
+            // store the index for our current compute group
             if (!tmpStorage.create(graphPartIndex)) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Creating chunk for partition index failed");

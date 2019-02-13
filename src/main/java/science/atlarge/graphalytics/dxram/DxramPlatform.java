@@ -55,9 +55,14 @@ import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.BufferedWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Dxram platform driver for the Graphalytics benchmark.
@@ -90,7 +95,34 @@ public class DxramPlatform implements Platform {
 	public void deleteGraph(LoadedGraph loadedGraph) throws Exception {}
 
 	@Override
-	public void prepare(RunSpecification runSpecification) throws Exception {}
+	public void prepare(RunSpecification runSpecification) throws Exception {
+		// create graph partition index file
+		final String gpiPath = runSpecification
+				.getRuntimeSetup()
+				.getLoadedGraph()
+				.getVertexPath() +
+				".gpi";
+		final long cntVertices = runSpecification
+				.getBenchmarkRun()
+				.getFormattedGraph()
+				.getNumberOfVertices();
+		final long cntEdges = runSpecification
+				.getBenchmarkRun()
+				.getFormattedGraph()
+				.getNumberOfEdges();
+
+		try (BufferedWriter bw =  Files.newBufferedWriter(
+				Paths.get(gpiPath),
+				StandardCharsets.US_ASCII,
+				StandardOpenOption.CREATE_NEW,
+				StandardOpenOption.WRITE)) {
+			bw.write(
+					"0, " +
+					String.valueOf(cntVertices) + ", " +
+					String.valueOf(cntEdges) + ", " +
+					"0");
+		}
+	}
 
 	@Override
 	public void startup(RunSpecification runSpecification) throws Exception {
