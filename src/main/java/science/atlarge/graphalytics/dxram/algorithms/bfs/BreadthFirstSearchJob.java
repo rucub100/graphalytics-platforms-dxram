@@ -15,16 +15,23 @@
  */
 package science.atlarge.graphalytics.dxram.algorithms.bfs;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
+import de.hhu.bsinfo.dxram.ms.TaskListener;
 import de.hhu.bsinfo.dxram.ms.TaskScript;
+import de.hhu.bsinfo.dxram.ms.TaskScriptState;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
+import science.atlarge.graphalytics.dxram.graph.load.GraphLoadOrderedEdgeListTask;
+import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
 import science.atlarge.graphalytics.dxram.job.DxramJob;
 
 /**
@@ -39,7 +46,10 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	private static final Logger LOG = LogManager.getLogger();
 
 	private final long sourceVertex;
-	private GraphAlgorithmBFSTask bfsTask;
+	private transient GraphAlgorithmBFSTask bfsTask;
+	private transient GraphLoadPartitionIndexTask gpiTask;
+	private transient GraphLoadBFSRootListTask rootListTask;
+	private transient GraphLoadOrderedEdgeListTask oelTask;
 
 	/**
 	 * Creates a new BreadthFirstSearchJob object with all mandatory parameters specified.
@@ -60,18 +70,63 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	}
 
 	private void submitBFSTask() {
+		final AtomicBoolean finished = new AtomicBoolean(false); 
+		final TaskListener taskListener = new TaskListener() {
+			@Override
+			public void taskCompleted(TaskScriptState p_taskScriptState) {
+				finished.set(true);
+			}
+
+			@Override
+			public void taskBeforeExecution(TaskScriptState p_taskScriptState) {}
+		};
+
 		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
 		bfsTask = new GraphAlgorithmBFSTask();
 		TaskScript taskScript = new TaskScript(bfsTask);
-		ms.submitTaskScript(taskScript, (short)0);
+		ms.submitTaskScript(taskScript, (short)0, taskListener);
+
+		// wait till finished
+		while(!finished.get()) {
+			try { 
+				Thread.sleep(100);
+			} catch (Exception ignore) {}
+		}
 	}
 
+	private void submitGPITask() {
+		final AtomicBoolean finished = new AtomicBoolean(false); 
+		final TaskListener taskListener = new TaskListener() {
+			@Override
+			public void taskCompleted(TaskScriptState p_taskScriptState) {
+				finished.set(true);
+			}
+
+			@Override
+			public void taskBeforeExecution(TaskScriptState p_taskScriptState) {}
+		};
+
+		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
+		gpiTask = new GraphLoadPartitionIndexTask();
+		gpiTask.setPartitionIndexFilePath(vertexPath + ".gpi");
+		TaskScript taskScript = new TaskScript(gpiTask);
+		ms.submitTaskScript(taskScript, (short)0, taskListener);
+
+		// wait till finished
+		while(!finished.get()) {
+			try { 
+				Thread.sleep(100);
+			} catch (Exception ignore) {}
+		}
+	}
 	@Override
 	protected void run() {
 		LOG.error("TODO: Implement distributed BFS algorithm...");
 		// reserve local ids (CIDs)
 		ChunkLocalService cls = getService(ChunkLocalService.class);
 		cls.reserveLocal().reserve(500000000);
+		// run task to load the graph partition index
+		submitGPITask();
 		// TODO: load graph into runner DXRAM instance
 		// define runner as slave to run the task locally (debugging)
 		// run the BFSTask
