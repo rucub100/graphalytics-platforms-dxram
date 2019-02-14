@@ -53,7 +53,6 @@ import de.hhu.bsinfo.dxram.ms.TaskContext;
 import de.hhu.bsinfo.dxram.nameservice.NameserviceService;
 import de.hhu.bsinfo.dxram.net.NetworkService;
 import de.hhu.bsinfo.dxram.sync.SynchronizationService;
-import de.hhu.bsinfo.dxram.tmp.TemporaryStorageService;
 import de.hhu.bsinfo.dxnet.MessageReceiver;
 import de.hhu.bsinfo.dxnet.core.Message;
 import de.hhu.bsinfo.dxnet.core.NetworkException;
@@ -97,7 +96,6 @@ public class GraphAlgorithmBFSTask implements Task {
     private NetworkService m_networkService;
     private BootService m_bootService;
     private SynchronizationService m_synchronizationService;
-    private TemporaryStorageService m_temporaryStorageService;
 
     private short m_nodeId = NodeID.INVALID_ID;
     private GraphPartitionIndex m_graphPartitionIndex;
@@ -157,7 +155,6 @@ public class GraphAlgorithmBFSTask implements Task {
         m_networkService = m_ctx.getDXRAMServiceAccessor().getService(NetworkService.class);
         m_bootService = m_ctx.getDXRAMServiceAccessor().getService(BootService.class);
         m_synchronizationService = m_ctx.getDXRAMServiceAccessor().getService(SynchronizationService.class);
-        m_temporaryStorageService = m_ctx.getDXRAMServiceAccessor().getService(TemporaryStorageService.class);
 
         m_networkService.registerMessageType(DXGraphMessageTypes.BFS_MESSAGES_TYPE, BFSMessages.SUBTYPE_VERTICES_FOR_NEXT_FRONTIER_MESSAGE,
                 VerticesForNextFrontierMessage.class);
@@ -207,7 +204,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
         m_graphPartitionIndex = new GraphPartitionIndex();
         m_graphPartitionIndex.setID(graphPartitionIndexChunkId);
-        if (!m_temporaryStorageService.get(m_graphPartitionIndex)) {
+        if (!m_chunkService.get().get(m_graphPartitionIndex)) {
             // #if LOGGER >= ERROR
             LOGGER.error("Getting graph partition index from temporary memory chunk 0x%X failed", graphPartitionIndexChunkId);
             // #endif /* LOGGER >= ERROR */
@@ -224,7 +221,7 @@ public class GraphAlgorithmBFSTask implements Task {
         }
 
         GraphRootList rootList = new GraphRootList(tmpStorageIdRootVertices);
-        if (!m_temporaryStorageService.get(rootList)) {
+        if (!m_chunkService.get().get(rootList)) {
             // #if LOGGER >= ERROR
             LOGGER.error("Getting root list 0x%X of vertices for bfs from temporary storage failed", tmpStorageIdRootVertices);
             // #endif /* LOGGER >= ERROR */
@@ -287,7 +284,8 @@ public class GraphAlgorithmBFSTask implements Task {
             m_signalLock.unlock();
 
             m_curBFS.init(m_graphPartitionIndex.getPartitionIndex(m_ctx.getCtxData().getSlaveId()).getVertexCount(), m_markVertices);
-            if (ChunkID.getCreatorID(root) == m_nodeId) {
+            // TODO: FIX THIS LATER!!!
+            if (ChunkID.getCreatorID(root) == m_nodeId || true) {
                 m_curBFS.execute(root);
             } else {
                 m_curBFS.execute(ChunkID.INVALID_ID);

@@ -60,6 +60,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -110,6 +111,10 @@ public class DxramPlatform implements Platform {
 				.getBenchmarkRun()
 				.getFormattedGraph()
 				.getNumberOfEdges();
+
+		if (Files.exists(Paths.get(gpiPath))) {
+			return;
+		}
 
 		try (BufferedWriter bw =  Files.newBufferedWriter(
 				Paths.get(gpiPath),

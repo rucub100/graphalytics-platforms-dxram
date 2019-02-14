@@ -46,5 +46,8 @@ public final class LocalClusteringCoefficientJob extends DxramJob {
 	@Override
 	protected void run() {
 		System.err.println("LCC not implemented");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ignore) {}
 	}
 }

@@ -53,5 +53,8 @@ public final class CommunityDetectionLPJob extends DxramJob {
 	@Override
 	protected void run() {
 		System.err.println("CDLP not implemented!");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ignore) {}
 	}
 }

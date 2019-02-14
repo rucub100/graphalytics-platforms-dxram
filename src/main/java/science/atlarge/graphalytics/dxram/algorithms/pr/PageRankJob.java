@@ -55,5 +55,8 @@ public final class PageRankJob extends DxramJob {
 	@Override
 	protected void run() {
 		System.err.println("PR not implemented");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ignore) {}
 	}
 }

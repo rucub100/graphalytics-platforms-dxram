@@ -26,11 +26,12 @@ import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
 import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeListRoots;
 import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeListRootsBinaryFile;
 import de.hhu.bsinfo.dxmem.data.ChunkID;
+import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
 import de.hhu.bsinfo.dxram.ms.TaskContext;
 import de.hhu.bsinfo.dxram.nameservice.NameserviceService;
-import de.hhu.bsinfo.dxram.tmp.TemporaryStorageService;
 import de.hhu.bsinfo.dxutils.serialization.Exporter;
 import de.hhu.bsinfo.dxutils.serialization.Importer;
 
@@ -88,8 +89,9 @@ public class GraphLoadBFSRootListTask implements Task {
         // store the result. every other slave can simply grab the
         // root list from chunk memory
         if (p_ctx.getCtxData().getSlaveId() == 0) {
-            TemporaryStorageService temporaryStorageService = p_ctx.getDXRAMServiceAccessor().getService(TemporaryStorageService.class);
             NameserviceService nameserviceService = p_ctx.getDXRAMServiceAccessor().getService(NameserviceService.class);
+            ChunkService chunkService = p_ctx.getDXRAMServiceAccessor().getService(ChunkService.class);
+            ChunkLocalService chunkLocalService = p_ctx.getDXRAMServiceAccessor().getService(ChunkLocalService.class);
 
             // look for the graph partitioned index of the current compute group
             long chunkIdPartitionIndex =
@@ -105,7 +107,7 @@ public class GraphLoadBFSRootListTask implements Task {
             graphPartitionIndex.setID(chunkIdPartitionIndex);
 
             // get the index
-            if (!temporaryStorageService.get(graphPartitionIndex)) {
+            if (!chunkService.get().get(graphPartitionIndex)) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Getting partition index from temporary memory failed");
                 // #endif /* LOGGER >= ERROR */
@@ -128,20 +130,18 @@ public class GraphLoadBFSRootListTask implements Task {
                 return -4;
             }
 
-            rootList.setID(temporaryStorageService.generateStorageId(MS_BFS_ROOTS + p_ctx.getCtxData().getComputeGroupId()));
-
             // store the root list for our current compute group
-            if (!temporaryStorageService.create(rootList)) {
+            if (chunkLocalService.createLocal().create(rootList) != 1) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Creating chunk for root list failed");
                 // #endif /* LOGGER >= ERROR */
                 return -5;
             }
 
-            if (!temporaryStorageService.put(rootList)) {
+            if (chunkService.put().put(rootList)) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Putting root list failed");
-                // #endif /* LOGGER >= ERROR */
+                // #endif /* LOGGER >= ERROR */l
                 return -6;
             }
 

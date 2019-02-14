@@ -20,18 +20,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.hhu.bsinfo.dxmem.data.ChunkID;
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
 import de.hhu.bsinfo.dxram.ms.TaskListener;
 import de.hhu.bsinfo.dxram.ms.TaskScript;
 import de.hhu.bsinfo.dxram.ms.TaskScriptState;
+import de.hhu.bsinfo.dxram.nameservice.NameserviceService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
+import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadOrderedEdgeListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
+import science.atlarge.graphalytics.dxram.graph.load.oel.GraphalyticsOrderedEdgeList;
 import science.atlarge.graphalytics.dxram.job.DxramJob;
 
 /**
@@ -48,7 +54,6 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	private final long sourceVertex;
 	private transient GraphAlgorithmBFSTask bfsTask;
 	private transient GraphLoadPartitionIndexTask gpiTask;
-	private transient GraphLoadBFSRootListTask rootListTask;
 	private transient GraphLoadOrderedEdgeListTask oelTask;
 
 	/**
@@ -119,18 +124,83 @@ public final class BreadthFirstSearchJob extends DxramJob {
 			} catch (Exception ignore) {}
 		}
 	}
+
+	private void loadRootList() {
+		NameserviceService nameserviceService = getService(NameserviceService.class);
+		ChunkService chunkService = getService(ChunkService.class);
+		ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
+
+		GraphRootList rootList = new GraphRootList(ChunkID.INVALID_ID,
+				new long[] { GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.get(sourceVertex) }); // index starts with 0; offset per slave?
+
+        // store the root list for our current compute group
+        if (chunkLocalService.createLocal().create(rootList) != 1) {
+            LOG.error("Creating chunk for root list failed");
+        }
+
+        if (!chunkService.put().put(rootList)) {
+            LOG.error("Putting root list failed");
+        }
+
+        // register chunk at nameservice that other slaves can find it
+        nameserviceService.register(rootList, GraphLoadBFSRootListTask.MS_BFS_ROOTS + "0");
+        LOG.info(
+        		"Successfully loaded and stored root list, nameservice entry name %s:\n%s",
+        		GraphLoadBFSRootListTask.MS_BFS_ROOTS + "0",
+                rootList);
+	}
+
+	private void loadOELTask() {
+		final AtomicBoolean finished = new AtomicBoolean(false); 
+		final TaskListener taskListener = new TaskListener() {
+			@Override
+			public void taskCompleted(TaskScriptState p_taskScriptState) {
+				finished.set(true);
+			}
+
+			@Override
+			public void taskBeforeExecution(TaskScriptState p_taskScriptState) {}
+		};
+
+		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
+		oelTask = new GraphLoadOrderedEdgeListTask();
+		oelTask.setLoadVertexPath(vertexPath);
+		oelTask.setLoadEdgePath(edgePath);
+		TaskScript taskScript = new TaskScript(oelTask);
+		ms.submitTaskScript(taskScript, (short)0, taskListener);
+
+		// wait till finished
+		while(!finished.get()) {
+			try { 
+				Thread.sleep(100);
+			} catch (Exception ignore) {}
+		}
+	}
+
 	@Override
 	protected void run() {
-		LOG.error("TODO: Implement distributed BFS algorithm...");
+		LOG.error("RUN DXGraph-BFS algorithm...");
+		if (vertexPath.contains("example-directed")) {
+			LOG.error("SKIP DIRECTED GRAPH");
+			return;
+		}
 		// reserve local ids (CIDs)
 		ChunkLocalService cls = getService(ChunkLocalService.class);
-		cls.reserveLocal().reserve(500000000);
+		cls.reserveLocal().reserve(600000000);
 		// run task to load the graph partition index
 		submitGPITask();
-		// TODO: load graph into runner DXRAM instance
+		// load graph into runner DXRAM instance
+		loadOELTask();
+		// load root vertex into the temporary storage
+		loadRootList();
 		// define runner as slave to run the task locally (debugging)
 		// run the BFSTask
 		submitBFSTask();
 		// gather the results and create "expected" output
+		for (long cid : GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.values()) {
+			VertexSimple v = new VertexSimple(cid);
+			cls.getLocal().get(v);
+			LOG.info(String.format("Vertex %d has depth %d", cid, v.getUserData()));
+		}
 	}
 }

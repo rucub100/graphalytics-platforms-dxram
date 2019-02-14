@@ -54,5 +54,8 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 	@Override
 	protected void run() {
 		System.err.println("SSSP not implemented");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ignore) {}
 	}
 }

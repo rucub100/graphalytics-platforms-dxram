@@ -25,14 +25,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
+import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.logger.LoggerService;
 import de.hhu.bsinfo.dxram.ms.Signal;
 import de.hhu.bsinfo.dxram.ms.Task;
 import de.hhu.bsinfo.dxram.ms.TaskContext;
 import de.hhu.bsinfo.dxram.nameservice.NameserviceService;
-import de.hhu.bsinfo.dxram.tmp.TemporaryStorageService;
 import de.hhu.bsinfo.dxutils.serialization.Exporter;
 import de.hhu.bsinfo.dxutils.serialization.Importer;
+
+import static de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil.*;
 
 /**
  * Load a partition index of a partitioned graph for one compute group. The index is
@@ -92,25 +95,24 @@ public class GraphLoadPartitionIndexTask implements Task {
         // index from chunk memory
         if (p_ctx.getCtxData().getSlaveId() == 0) {
             m_loggerService = p_ctx.getDXRAMServiceAccessor().getService(LoggerService.class);
-            TemporaryStorageService tmpStorage = p_ctx.getDXRAMServiceAccessor().getService(TemporaryStorageService.class);
             NameserviceService nameserviceService = p_ctx.getDXRAMServiceAccessor().getService(NameserviceService.class);
+            ChunkLocalService chunkLocalService = p_ctx.getDXRAMServiceAccessor().getService(ChunkLocalService.class);
+            ChunkService chunkService = p_ctx.getDXRAMServiceAccessor().getService(ChunkService.class);
 
             GraphPartitionIndex graphPartIndex = loadGraphPartitionIndexFromIndexFiles(p_ctx, m_pathFile);
             if (graphPartIndex == null) {
                 return -1;
             }
 
-            graphPartIndex.setID(tmpStorage.generateStorageId(MS_PART_INDEX_IDENT + p_ctx.getCtxData().getComputeGroupId()));
-
             // store the index for our current compute group
-            if (!tmpStorage.create(graphPartIndex)) {
+            if (chunkLocalService.createLocal().create(graphPartIndex) != 1) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Creating chunk for partition index failed");
                 // #endif /* LOGGER >= ERROR */
                 return -2;
             }
 
-            if (!tmpStorage.put(graphPartIndex)) {
+            if (!chunkService.put().put(graphPartIndex)) {
                 // #if LOGGER >= ERROR
                 LOGGER.error("Putting partition index failed");
                 // #endif /* LOGGER >= ERROR */
@@ -151,7 +153,7 @@ public class GraphLoadPartitionIndexTask implements Task {
 
     @Override
     public int sizeofObject() {
-        return Integer.BYTES + m_pathFile.length();
+        return sizeofString(m_pathFile);
     }
 
     /**
@@ -224,10 +226,10 @@ public class GraphLoadPartitionIndexTask implements Task {
                 continue;
             }
 
-            int partitionId = Integer.parseInt(tokens[0]);
+            int partitionId = Integer.parseInt(tokens[0].trim());
             GraphPartitionIndex.Entry entry =
-                    new GraphPartitionIndex.Entry(slaves[partitionId], partitionId, Long.parseLong(tokens[1]), Long.parseLong(tokens[2]),
-                            Long.parseLong(tokens[3]));
+                    new GraphPartitionIndex.Entry(slaves[partitionId], partitionId, Long.parseLong(tokens[1].trim()), Long.parseLong(tokens[2].trim()),
+                            Long.parseLong(tokens[3].trim()));
             entries.add(entry);
         }
 
