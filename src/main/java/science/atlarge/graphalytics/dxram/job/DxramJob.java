@@ -70,7 +70,7 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 			.getOutputDir()
 			.resolve(benchmarkRun.getName())
 			.toAbsolutePath()
-			.toString();;
+			.toString();
 
 		this.platformConfig = platformConfig;
 	}

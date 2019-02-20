@@ -15,6 +15,12 @@
  */
 package science.atlarge.graphalytics.dxram.algorithms.bfs;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +38,7 @@ import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
 import science.atlarge.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
+import science.atlarge.graphalytics.dxram.ProcTimeLog;
 import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
 import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
@@ -193,14 +200,33 @@ public final class BreadthFirstSearchJob extends DxramJob {
 		loadOELTask();
 		// load root vertex into the temporary storage
 		loadRootList();
-		// define runner as slave to run the task locally (debugging)
 		// run the BFSTask
+		// define runner as slave to run the task locally (debugging)
+		ProcTimeLog.start();
 		submitBFSTask();
+		ProcTimeLog.end();
 		// gather the results and create "expected" output
-		for (long cid : GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.values()) {
+		final StringBuilder output = new StringBuilder();
+
+		for (long vid : GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.keySet()) {
+		    final long cid = GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.get(vid);
 			VertexSimple v = new VertexSimple(cid);
 			cls.getLocal().get(v);
-			LOG.info(String.format("Vertex %d has depth %d", cid, v.getUserData()));
+			long depth = v.getUserData();
+			if (depth == -1) depth = Long.MAX_VALUE;
+			output.append(String.format("%d %d", vid, depth));
+			output.append('\n');
+			LOG.info(String.format("Vertex %d has depth %d", vid, v.getUserData()));
 		}
+
+		try {
+            Files.write(
+                    Paths.get(outputPath),
+                    output.toString().getBytes(),
+                    StandardOpenOption.CREATE_NEW,
+                    StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+        }
 	}
 }

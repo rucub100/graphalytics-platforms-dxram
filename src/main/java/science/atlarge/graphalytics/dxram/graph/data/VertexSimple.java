@@ -16,6 +16,7 @@ package science.atlarge.graphalytics.dxram.graph.data;
 import java.util.Arrays;
 
 import de.hhu.bsinfo.dxmem.data.AbstractChunk;
+import de.hhu.bsinfo.dxmem.data.ChunkID;
 import de.hhu.bsinfo.dxutils.serialization.Exporter;
 import de.hhu.bsinfo.dxutils.serialization.Importer;
 import de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil;
@@ -66,7 +67,7 @@ public class VertexSimple extends AbstractChunk {
      */
     public void setUserData(final int p_userData) {
         m_userData = p_userData;
-        System.out.println(getID() + ": " + p_userData);
+        System.out.println(ChunkID.getLocalID(getID()) + ": " + p_userData);
     } 
 
     /**

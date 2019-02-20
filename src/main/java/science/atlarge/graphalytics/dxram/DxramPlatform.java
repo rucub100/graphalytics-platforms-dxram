@@ -40,6 +40,7 @@ import science.atlarge.graphalytics.execution.PlatformExecutionException;
 import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.execution.BenchmarkRunner;
 import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
+import science.atlarge.graphalytics.report.result.BenchmarkMetric;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.dxram.algorithms.AlgorithmJobFactory;
 import science.atlarge.graphalytics.dxram.algorithms.bfs.BreadthFirstSearchJob;
@@ -58,6 +59,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.BufferedWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -74,6 +76,8 @@ public class DxramPlatform implements Platform {
 
 	private static DXRAM dxram;
 	private static JobService jobService;
+	private static long MAKESPAN_START = 0;
+	private static long MAKESPAN_END = 0;
 
 	protected static final Logger LOG = LogManager.getLogger();
 
@@ -131,6 +135,7 @@ public class DxramPlatform implements Platform {
 
 	@Override
 	public void startup(RunSpecification runSpecification) throws Exception {
+	    MAKESPAN_START = System.currentTimeMillis();
 		DxramCollector.startPlatformLogging(
 				runSpecification
 					.getBenchmarkRunSetup()
@@ -170,6 +175,7 @@ public class DxramPlatform implements Platform {
 
 	@Override
 	public BenchmarkMetrics finalize(RunSpecification runSpecification) throws Exception {
+	    MAKESPAN_END = System.currentTimeMillis();
 		dxram.shutdown();
 		DxramCollector.stopPlatformLogging();
 		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
@@ -177,6 +183,7 @@ public class DxramPlatform implements Platform {
 
 		BenchmarkMetrics metrics = new BenchmarkMetrics();
 		metrics.setProcessingTime(DxramCollector.collectProcessingTime(logDir));
+		metrics.setMakespan(new BenchmarkMetric(new BigDecimal(MAKESPAN_END - MAKESPAN_START), "ms"));
 		return metrics;
 	}
 
