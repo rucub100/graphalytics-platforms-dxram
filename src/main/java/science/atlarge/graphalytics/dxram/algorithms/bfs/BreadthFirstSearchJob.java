@@ -180,10 +180,10 @@ public final class BreadthFirstSearchJob extends DxramJob {
 	@Override
 	protected void run() {
 		LOG.error("RUN DXGraph-BFS algorithm...");
-		if (vertexPath.contains("example-directed")) {
-			LOG.error("SKIP DIRECTED GRAPH");
-			return;
-		}
+//		if (vertexPath.contains("example-directed")) {
+//			LOG.error("SKIP DIRECTED GRAPH");
+//			return;
+//		}
 		// reserve local ids (CIDs)
 		ChunkLocalService cls = getService(ChunkLocalService.class);
 		cls.reserveLocal().reserve(600000000);

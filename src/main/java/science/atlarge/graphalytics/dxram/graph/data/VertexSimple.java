@@ -66,7 +66,8 @@ public class VertexSimple extends AbstractChunk {
      */
     public void setUserData(final int p_userData) {
         m_userData = p_userData;
-    }
+        System.out.println(getID() + ": " + p_userData);
+    } 
 
     /**
      * Flag this vertex to write the userdata item only on

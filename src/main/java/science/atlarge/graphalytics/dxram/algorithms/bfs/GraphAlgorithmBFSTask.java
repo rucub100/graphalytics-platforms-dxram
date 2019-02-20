@@ -75,15 +75,15 @@ public class GraphAlgorithmBFSTask implements Task {
     @Expose
     private String m_bfsRootNameserviceEntry = GraphLoadBFSRootListTask.MS_BFS_ROOTS + '0';
     @Expose
-    private int m_vertexBatchSize = 100;
+    private int m_vertexBatchSize = 1;
     @Expose
-    private int m_vertexMessageBatchSize = 100;
+    private int m_vertexMessageBatchSize = 1;
     @Expose
-    private int m_numberOfThreadsPerNode = 4;
+    private int m_numberOfThreadsPerNode = 1;
     @Expose
     private boolean m_markVertices = true;
     @Expose
-    private boolean m_beamerMode = true;
+    private boolean m_beamerMode = false;
     @Expose
     private int m_beamerFormulaGraphEdgeDeg = 16;
     @Expose
@@ -542,6 +542,8 @@ public class GraphAlgorithmBFSTask implements Task {
 
                 // kick off threads with current frontier
                 for (BFSThread thread : m_threads) {
+                    // update current level for marking
+                    thread.setCurrentBFSDepthLevel(m_bfsLocalResult.m_totalBFSDepth);
                     thread.runIteration(bottomUpApproach);
                 }
 
@@ -665,7 +667,6 @@ public class GraphAlgorithmBFSTask implements Task {
                 // also swap the references of all threads!
                 for (BFSThread thread : m_threads) {
                     thread.triggerFrontierSwap();
-                    thread.setCurrentBFSDepthLevel(m_bfsLocalResult.m_totalBFSDepth);
                 }
 
                 // now we are good, allow new delegates from remotes
