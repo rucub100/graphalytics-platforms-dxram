@@ -83,7 +83,7 @@ public class GraphAlgorithmBFSTask implements Task {
     @Expose
     private boolean m_markVertices = true;
     @Expose
-    private boolean m_beamerMode = false;
+    private boolean m_beamerMode = true;
     @Expose
     private int m_beamerFormulaGraphEdgeDeg = 16;
     @Expose
@@ -523,17 +523,18 @@ public class GraphAlgorithmBFSTask implements Task {
                     // determine bfs approach for next iteration
                     // formula taken from beamer's "Distributed Memory Breadth-First Search Revisited:
                     // Enabling Bottom-Up Search"
-                    if (bottomUpApproach) {
-                        // last iteration was bottom up approach, check if we should switch
-                        if (fullGraphNextFrontVertexCount < fullGraphVertexCount / 14 * m_beamerFormulaGraphEdgeDeg) {
-                            bottomUpApproach = false;
-                        }
-                    } else {
-                        // last iteration was top down approach, check if we should switch
-                        if (fullGraphNextFrontEdgeCount > fullGraphEdgeCount / 10) {
-                            bottomUpApproach = true;
-                        }
-                    }
+//                    if (bottomUpApproach) {
+//                        // last iteration was bottom up approach, check if we should switch
+//                        if (fullGraphNextFrontVertexCount < fullGraphVertexCount / 14 * m_beamerFormulaGraphEdgeDeg) {
+//                            bottomUpApproach = false;
+//                        }
+//                    } else {
+//                        // last iteration was top down approach, check if we should switch
+//                        if (fullGraphNextFrontEdgeCount > fullGraphEdgeCount / 10) {
+//                            bottomUpApproach = true;
+//                        }
+//                    }
+                    bottomUpApproach = true;
                 }
 
                 LOGGER.info("BFS iteration %s, curFront size: %d, numEdgesInFrontier %d, vertex count %d, edge count %d",
