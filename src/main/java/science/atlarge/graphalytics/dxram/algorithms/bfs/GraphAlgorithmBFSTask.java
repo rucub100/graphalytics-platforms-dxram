@@ -83,7 +83,7 @@ public class GraphAlgorithmBFSTask implements Task {
     @Expose
     private boolean m_markVertices = true;
     @Expose
-    private boolean m_beamerMode = true;
+    private boolean m_beamerMode = false;
     @Expose
     private int m_beamerFormulaGraphEdgeDeg = 16;
     @Expose
@@ -534,7 +534,7 @@ public class GraphAlgorithmBFSTask implements Task {
 //                            bottomUpApproach = true;
 //                        }
 //                    }
-                    bottomUpApproach = true;
+                    bottomUpApproach = false;
                 }
 
                 LOGGER.info("BFS iteration %s, curFront size: %d, numEdgesInFrontier %d, vertex count %d, edge count %d",

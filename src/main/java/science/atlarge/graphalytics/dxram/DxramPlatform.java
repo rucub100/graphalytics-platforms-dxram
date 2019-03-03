@@ -48,6 +48,7 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
 import science.atlarge.graphalytics.dxram.job.GraphalyticsAbstractJob;
 import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -93,8 +94,7 @@ public class DxramPlatform implements Platform {
         String edgeFilePath = formattedGraph.getEdgeFilePath();
         if (!formattedGraph.isDirected()) {
             edgeFilePath += ".2";
-            final Map<Long, LinkedList<Long>> tmpEdges = new HashMap<Long, LinkedList<Long>>();
-            final SortedSet<Long> tmpSorted = new TreeSet<Long>();
+            final Map<Long, SortedSet<Long>> tmpEdges = new HashMap<Long, SortedSet<Long>>();
 
             try (
                     final BufferedWriter bw = Files.newBufferedWriter(
@@ -106,55 +106,31 @@ public class DxramPlatform implements Platform {
                 String line = br.readLine();
                 while (line != null) {
                     String[] tmp = line.split("\\s");
-                    long srcId = Long.parseLong(tmp[0]);
-                    long dstId = Long.parseLong(tmp[1]);
+                    final long left = Long.parseLong(tmp[0]);
+                    final long right = Long.parseLong(tmp[1]);
                     // TODO(later): handle properties payload, i.e. if tmp.length > 2
-
-                    if (!tmpEdges.containsKey(dstId)) {
-                        tmpEdges.put(dstId, new LinkedList<Long>());
-                        tmpSorted.add(dstId);
+                    
+                    if (!tmpEdges.containsKey(left)) {
+                        tmpEdges.put(left, new TreeSet<Long>());
+                    }
+                    if (!tmpEdges.containsKey(right)) {
+                        tmpEdges.put(right, new TreeSet<Long>());
                     }
 
-                    tmpEdges.get(dstId).add(srcId);
-
-                    while (!tmpSorted.isEmpty() && tmpSorted.first() < srcId) {
-                        long next = (long)((TreeSet<Long>) tmpSorted).pollFirst();
-                        LinkedList<Long> neighbors = tmpEdges.get(next);
-                        Long v = neighbors.poll();
-                        while (v != null) {
-                            bw.write(String.valueOf(next) + " " + String.valueOf(v) + "\n");
-                            v = neighbors.poll();
-                        }
-                        tmpEdges.remove(next);
-                        tmpSorted.remove(next);
-                    }
-
-                    if (tmpEdges.containsKey(srcId)) {
-                        LinkedList<Long> neighbors = tmpEdges.get(srcId);
-                        Long v = neighbors.poll();
-                        while (v != null) {
-                            bw.write(String.valueOf(srcId) + " " + String.valueOf(v) + "\n");
-                            v = neighbors.poll();
-                        }
-                        tmpEdges.remove(srcId);
-                        tmpSorted.remove(srcId);
-                    }
-
-                    bw.write(line);
-                    bw.write('\n');
+                    tmpEdges.get(left).add(right);
+                    tmpEdges.get(right).add(left);
                     line = br.readLine();
                 }
 
-                while (!tmpSorted.isEmpty()) {
-                    long next = (long)((TreeSet<Long>) tmpSorted).pollFirst();
-                    LinkedList<Long> neighbors = tmpEdges.get(next);
-                    Long v = neighbors.poll();
-                    while (v != null) {
-                        bw.write(String.valueOf(next) + " " + String.valueOf(v) + "\n");
-                        v = neighbors.poll();
+                final LinkedList<Long> sortedLeft = new LinkedList<Long>(tmpEdges.keySet());
+                Collections.sort(sortedLeft);
+
+                while (!sortedLeft.isEmpty()) {
+                    final long left = sortedLeft.poll();
+                    for (long right : tmpEdges.remove(left)) {
+                        bw.write(String.valueOf(left) + " " + String.valueOf(right));
+                        bw.write('\n');
                     }
-                    tmpEdges.remove(next);
-                    tmpSorted.remove(next);
                 }
             } catch (Exception e) {
                 throw new PlatformExecutionException("Failed to load the undirected graph!", e);

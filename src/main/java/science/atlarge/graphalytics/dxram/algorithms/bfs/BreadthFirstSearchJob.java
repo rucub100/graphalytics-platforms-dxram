@@ -216,7 +216,7 @@ public final class BreadthFirstSearchJob extends DxramJob {
 			if (depth == -1) depth = Long.MAX_VALUE;
 			output.append(String.format("%d %d", vid, depth));
 			output.append('\n');
-			LOG.info(String.format("Vertex %d has depth %d", vid, v.getUserData()));
+			//LOG.info(String.format("Vertex %d has depth %d", vid, v.getUserData()));
 		}
 
 		try {
