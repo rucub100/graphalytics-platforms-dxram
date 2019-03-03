@@ -96,13 +96,9 @@ public class DxramPlatform implements Platform {
             edgeFilePath += ".2";
             final Map<Long, SortedSet<Long>> tmpEdges = new HashMap<Long, SortedSet<Long>>();
 
-            try (
-                    final BufferedWriter bw = Files.newBufferedWriter(
-                            Paths.get(edgeFilePath), StandardCharsets.US_ASCII,
-                            StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-                    final BufferedReader br = Files.newBufferedReader(
-                            Paths.get(formattedGraph.getEdgeFilePath()),
-                            StandardCharsets.US_ASCII)) {
+            try (final BufferedReader br = Files.newBufferedReader(
+                    Paths.get(formattedGraph.getEdgeFilePath()),
+                    StandardCharsets.US_ASCII)) {
                 String line = br.readLine();
                 while (line != null) {
                     String[] tmp = line.split("\\s");
@@ -121,6 +117,15 @@ public class DxramPlatform implements Platform {
                     tmpEdges.get(right).add(left);
                     line = br.readLine();
                 }
+            } catch (Exception e) {
+                throw new PlatformExecutionException("Failed to load the undirected graph!", e);
+            }
+            System.gc();
+
+            try (final BufferedWriter bw = Files.newBufferedWriter(
+                            Paths.get(edgeFilePath), StandardCharsets.US_ASCII,
+                            StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+                
 
                 final LinkedList<Long> sortedLeft = new LinkedList<Long>(tmpEdges.keySet());
                 Collections.sort(sortedLeft);
@@ -135,6 +140,8 @@ public class DxramPlatform implements Platform {
             } catch (Exception e) {
                 throw new PlatformExecutionException("Failed to load the undirected graph!", e);
             }
+            tmpEdges.clear();
+            System.gc();
         }
 
         return new LoadedGraph(formattedGraph, formattedGraph.getVertexFilePath(), edgeFilePath);
