@@ -30,8 +30,6 @@ import science.atlarge.graphalytics.dxram.graph.Graph;
 public class DropAllChunksJob extends GraphalyticsAbstractJob {
 	private static final Logger LOGGER = LogManager.getFormatterLogger(DropAllChunksJob.class.getSimpleName());
 
-	public static final short TYPE_ID = 2;
-
 	// Needed to be serializable/deserializable?
 	public DropAllChunksJob() { }
 
@@ -43,11 +41,6 @@ public class DropAllChunksJob extends GraphalyticsAbstractJob {
 			String outputPath,
 			DxramConfiguration platformConfig) {
 		super(jobId, logPath, vertexPath, edgePath, outputPath, platformConfig);
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override

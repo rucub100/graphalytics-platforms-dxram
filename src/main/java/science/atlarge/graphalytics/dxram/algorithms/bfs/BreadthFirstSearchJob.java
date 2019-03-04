@@ -31,7 +31,7 @@ import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.ms.MasterSlaveComputeService;
 import de.hhu.bsinfo.dxram.ms.TaskListener;
-import de.hhu.bsinfo.dxram.ms.TaskScript;
+import de.hhu.bsinfo.dxram.ms.script.TaskScript;
 import de.hhu.bsinfo.dxram.ms.TaskScriptState;
 import de.hhu.bsinfo.dxram.nameservice.NameserviceService;
 import science.atlarge.graphalytics.domain.algorithms.AlgorithmParameters;
@@ -54,8 +54,6 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
  */
 public final class BreadthFirstSearchJob extends DxramJob {
 
-	public static final short TYPE_ID = 10;
-
 	private static final Logger LOG = LogManager.getLogger();
 
 	private final long sourceVertex;
@@ -74,11 +72,6 @@ public final class BreadthFirstSearchJob extends DxramJob {
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.sourceVertex = ((BreadthFirstSearchParameters)parameters).getSourceVertex();
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	private void submitBFSTask() {

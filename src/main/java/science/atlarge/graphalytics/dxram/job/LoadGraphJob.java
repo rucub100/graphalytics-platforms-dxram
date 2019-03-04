@@ -42,8 +42,6 @@ import science.atlarge.graphalytics.dxram.graph.Graph;
 public class LoadGraphJob extends GraphalyticsAbstractJob {
 	private static final Logger LOGGER = LogManager.getFormatterLogger(LoadGraphJob.class.getSimpleName());
 
-	public static final short TYPE_ID = 1;
-
 	// Needed to be serializable/deserializable?
 	public LoadGraphJob() { }
 
@@ -55,11 +53,6 @@ public class LoadGraphJob extends GraphalyticsAbstractJob {
 			String outputPath,
 			DxramConfiguration platformConfig) {
 		super(jobId, logPath, vertexPath, edgePath, outputPath, platformConfig);
-	}
-	
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override

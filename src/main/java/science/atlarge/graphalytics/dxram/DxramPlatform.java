@@ -175,7 +175,6 @@ public class DxramPlatform implements Platform {
         DxramCollector.startPlatformLogging(
                 runSpecification.getBenchmarkRunSetup().getLogDir().resolve("platform").resolve("runner.logs"));
         initDxram();
-        registerJobTypes();
     }
 
     @Override
@@ -248,27 +247,6 @@ public class DxramPlatform implements Platform {
         }
 
         jobService = dxram.getService(JobService.class);
-    }
-
-    /**
-     * Register all job types.
-     */
-    private void registerJobTypes() {
-        // abstract types
-        jobService.registerJobType(GraphalyticsAbstractJob.TYPE_ID, GraphalyticsAbstractJob.class);
-        jobService.registerJobType(DxramJob.TYPE_ID, DxramJob.class);
-
-        // load and unload
-        jobService.registerJobType(LoadGraphJob.TYPE_ID, LoadGraphJob.class);
-        jobService.registerJobType(DropAllChunksJob.TYPE_ID, DropAllChunksJob.class);
-
-        // algorithms
-        jobService.registerJobType(BreadthFirstSearchJob.TYPE_ID, BreadthFirstSearchJob.class);
-        jobService.registerJobType(CommunityDetectionLPJob.TYPE_ID, CommunityDetectionLPJob.class);
-        jobService.registerJobType(LocalClusteringCoefficientJob.TYPE_ID, LocalClusteringCoefficientJob.class);
-        jobService.registerJobType(PageRankJob.TYPE_ID, PageRankJob.class);
-        jobService.registerJobType(SingleSourceShortestPathsJob.TYPE_ID, SingleSourceShortestPathsJob.class);
-        jobService.registerJobType(WeaklyConnectedComponentsJob.TYPE_ID, WeaklyConnectedComponentsJob.class);
     }
 
     /**

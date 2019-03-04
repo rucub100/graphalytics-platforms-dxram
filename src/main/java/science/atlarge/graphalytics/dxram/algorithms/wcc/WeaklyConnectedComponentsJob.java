@@ -27,8 +27,6 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
  */
 public final class WeaklyConnectedComponentsJob extends DxramJob {
 
-	public static final short TYPE_ID = 15;
-
 	/**
 	 * Creates a new ConnectedComponentsJob object with all mandatory parameters specified.
 	 *
@@ -37,11 +35,6 @@ public final class WeaklyConnectedComponentsJob extends DxramJob {
 	 */
 	public WeaklyConnectedComponentsJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
 		super(runSpecification, platformConfig);
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override

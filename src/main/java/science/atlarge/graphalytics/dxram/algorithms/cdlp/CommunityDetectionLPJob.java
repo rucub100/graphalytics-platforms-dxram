@@ -28,8 +28,6 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
  */
 public final class CommunityDetectionLPJob extends DxramJob {
 
-	public static final short TYPE_ID = 11;
-
 	private final long iteration;
 
 	/**
@@ -43,11 +41,6 @@ public final class CommunityDetectionLPJob extends DxramJob {
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.iteration = ((CommunityDetectionLPParameters)parameters).getMaxIterations();
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override

@@ -40,8 +40,6 @@ import java.util.List;
  */
 public abstract class DxramJob extends GraphalyticsAbstractJob {
 
-	public static final short TYPE_ID = 21;
-
 	private static final Logger LOG = LogManager.getLogger();
 
 	/**

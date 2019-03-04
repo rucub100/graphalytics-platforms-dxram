@@ -29,8 +29,6 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
  */
 public final class SingleSourceShortestPathsJob extends DxramJob {
 
-	public static final short TYPE_ID = 14;
-
 	private final long sourceVertex;
 
 	/**
@@ -44,11 +42,6 @@ public final class SingleSourceShortestPathsJob extends DxramJob {
 
 		AlgorithmParameters parameters = runSpecification.getBenchmarkRun().getAlgorithmParameters();
 		this.sourceVertex = ((SingleSourceShortestPathsParameters)parameters).getSourceVertex();
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override

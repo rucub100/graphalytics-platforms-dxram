@@ -27,8 +27,7 @@ import science.atlarge.graphalytics.dxram.job.DxramJob;
  */
 public final class LocalClusteringCoefficientJob extends DxramJob {
 
-	public static final short TYPE_ID = 12;
-	/**
+    /**
 	 * Creates a new ConnectedComponentsJob object with all mandatory parameters specified.
 	 *
 	 * @param platformConfig the platform configuration.
@@ -36,11 +35,6 @@ public final class LocalClusteringCoefficientJob extends DxramJob {
 	 */
 	public LocalClusteringCoefficientJob(RunSpecification runSpecification, DxramConfiguration platformConfig) {
 		super(runSpecification, platformConfig);
-	}
-
-	@Override
-	public short getTypeID() {
-		return TYPE_ID;
 	}
 
 	@Override
