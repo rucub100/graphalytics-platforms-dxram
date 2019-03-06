@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
-import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 import science.atlarge.graphalytics.dxram.graph.load.oel.GraphalyticsOrderedEdgeList;
 import science.atlarge.graphalytics.dxram.graph.load.oel.OrderedEdgeList;
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
@@ -281,7 +281,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
      */
 
     private boolean loadGraphPartition(final OrderedEdgeList p_orderedEdgeList, final GraphPartitionIndex p_graphPartitionIndex) {
-        VertexSimple[] vertexBuffer = new VertexSimple[m_vertexBatchSize];
+        Vertex[] vertexBuffer = new Vertex[m_vertexBatchSize];
         int readCount;
 
         GraphPartitionIndex.Entry currentPartitionIndexEntry = p_graphPartitionIndex.getPartitionIndex(m_ctx.getCtxData().getSlaveId());
@@ -306,7 +306,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
         while (true) {
             readCount = 0;
             while (readCount < vertexBuffer.length) {
-                VertexSimple vertex = p_orderedEdgeList.readVertex();
+                Vertex vertex = p_orderedEdgeList.readVertex();
                 if (vertex == null) {
                 	break;
                 }
@@ -318,7 +318,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 // re-basing of neighbors needed for multiple files
                 // offset tells us how much to add
                 // also add current node ID
-                long[] neighbours = vertex.getNeighbours();
+                long[] neighbours = vertex.getNeighbors();
                 if (!p_graphPartitionIndex.rebaseGlobalVertexIdToLocalPartitionVertexId(neighbours)) {
                     // #if LOGGER >= ERROR
                     LOGGER.error("Rebasing of neighbors of %s failed, out of vertex id range of graph: %s", vertex, Arrays.toString(neighbours));
@@ -332,8 +332,6 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                     // #if LOGGER >= WARNING
                     LOGGER.warn("Neighbor count of vertex %s exceeds total number of neighbors that fit into a " + "single vertex; will be truncated", vertex);
                     // #endif /* LOGGER >= WARNING */
-
-                    vertex.setNeighbourCount(134217660);
                 }
 
                 vertexBuffer[readCount] = vertex;
@@ -354,7 +352,6 @@ public class GraphLoadOrderedEdgeListTask implements Task {
             m_chunkLocalService.createReservedLocal().create((AbstractChunk[]) vertexBuffer);
 
             int count = m_chunkService.put().put((AbstractChunk[]) vertexBuffer);
-            VertexSimple test = new VertexSimple(0);
             
             if (count != readCount) {
                 // #if LOGGER >= ERROR

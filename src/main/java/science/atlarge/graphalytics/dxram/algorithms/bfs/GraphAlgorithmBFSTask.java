@@ -37,7 +37,7 @@ import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.VerticesForNex
 import science.atlarge.graphalytics.dxram.graph.data.BFSResult;
 import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
 import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
-import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
 
@@ -480,7 +480,8 @@ public class GraphAlgorithmBFSTask implements Task {
                 LOGGER.info("I am starting BFS with entry vertex 0x%X", p_entryVertex);
                 // #endif /* LOGGER >= INFO */
 
-                VertexSimple vertex = new VertexSimple(p_entryVertex);
+                Vertex vertex = new Vertex();
+                vertex.setID(p_entryVertex);
                 if (!m_chunkService.get().get(vertex)) {
                     LOGGER.error("Getting root vertex 0x%X failed", p_entryVertex);
                     // signal all other slaves to terminate (error)
@@ -491,7 +492,7 @@ public class GraphAlgorithmBFSTask implements Task {
                 // mark root visited
                 if (m_markVisited) {
                     // mark data mode
-                	vertex.setUserData(m_bfsLocalResult.m_totalBFSDepth);
+                	vertex.setDepth(m_bfsLocalResult.m_totalBFSDepth);
                     //if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
                     if (!m_chunkService.put().put(vertex)) {
                         LOGGER.error("Marking root vertex 0x%X failed", p_entryVertex);
@@ -503,7 +504,7 @@ public class GraphAlgorithmBFSTask implements Task {
                 m_visitedFrontier.pushBack(ChunkID.getLocalID(p_entryVertex));
                 m_visitedFrontier.popFrontReset();
 
-                numEdgesInNextFrontier = vertex.getNeighbours().length;
+                numEdgesInNextFrontier = vertex.getNeighbors().length;
 
                 m_curFrontier.pushBack(ChunkID.getLocalID(p_entryVertex));
 
@@ -815,14 +816,15 @@ public class GraphAlgorithmBFSTask implements Task {
                     if (m_visitedFrontier.pushBack(localId)) {
                         m_nextFrontier.pushBack(localId);
                         
-                        VertexSimple vertex = new VertexSimple(vertexId);
+                        Vertex vertex = new Vertex();
+                        vertex.setID(vertexId);
                         m_chunkService.get().get(vertex);
                         if (m_markVisited) {
-                        	vertex.setUserData(m_bfsLocalResult.m_totalBFSDepth);
+                        	vertex.setDepth(m_bfsLocalResult.m_totalBFSDepth);
                         }
 
                         // read num of edges for calculating bottom up <-> top down switching formula
-                        int numEdges = vertex.getNeighbours().length;
+                        int numEdges = vertex.getNeighbors().length;
                         if (numEdges != -1) {
                             m_edgeCountNextFrontier.addAndGet(numEdges);
                         } else {
@@ -1030,7 +1032,7 @@ public class GraphAlgorithmBFSTask implements Task {
         private ConcurrentBitVectorHybrid m_visitedFrontier;
 
         private short m_nodeId;
-        private VertexSimple[] m_vertexBatch;
+        private Vertex[] m_vertexBatch;
         private int m_currentDepthLevel;
         private VerticesForNextFrontierMessage[] m_remoteMessages = new VerticesForNextFrontierMessage[NodeID.MAX_ID];
 
@@ -1077,11 +1079,11 @@ public class GraphAlgorithmBFSTask implements Task {
             m_visitedFrontier = p_visitedFrontierShared;
 
             m_nodeId = m_bootService.getNodeID();
-            m_vertexBatch = new VertexSimple[p_vertexBatchSize];
+            m_vertexBatch = new Vertex[p_vertexBatchSize];
             for (int i = 0; i < m_vertexBatch.length; i++) {
-                m_vertexBatch[i] = new VertexSimple(ChunkID.INVALID_ID);
+                m_vertexBatch[i] = new Vertex();
                 // performance hack: if writing back, we only write back what we changed
-                m_vertexBatch[i].setWriteUserDataOnly(true);
+                // TODO m_vertexBatch[i].setWriteUserDataOnly(true);
             }
 
             m_sharedVertexCounter = p_sharedVertexCounter;
@@ -1174,7 +1176,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
                 if (m_bottomUpIteration) {
                     m_visitedFrontier.popFrontLock();
-                    for (VertexSimple vertexBatch : m_vertexBatch) {
+                    for (Vertex vertexBatch : m_vertexBatch) {
                         long tmp = m_visitedFrontier.popFrontInverse();
                         // 0 is the index chunk, re-pop
                         if (tmp == 0) {
@@ -1194,7 +1196,7 @@ public class GraphAlgorithmBFSTask implements Task {
                     m_visitedFrontier.popFrontUnlock();
                 } else {
                     m_curFrontier.popFrontLock();
-                    for (VertexSimple vertexBatch : m_vertexBatch) {
+                    for (Vertex vertexBatch : m_vertexBatch) {
                         long tmp = m_curFrontier.popFront();
                         if (tmp != -1) {
                             vertexBatch.setID(ChunkID.getChunkID(m_nodeId, tmp));
@@ -1262,7 +1264,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
                 for (int i = 0; i < validVertsInBatch; i++) {
                     // check first if visited
-                    VertexSimple vertex = m_vertexBatch[i];
+                    Vertex vertex = m_vertexBatch[i];
 
                     // skip vertices that were already marked invalid before
                     if (vertex.getID() == ChunkID.INVALID_ID) {
@@ -1271,7 +1273,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
                     m_sharedVertexCounter.incrementAndGet();
 
-                    long[] neighbours = vertex.getNeighbours();
+                    long[] neighbours = vertex.getNeighbors();
                     long vertexLocalId = ChunkID.getLocalID(vertex.getID());
                     for (long neighbour : neighbours) {
                         // check if neighbors are valid, otherwise something's not ok with the data
@@ -1344,7 +1346,7 @@ public class GraphAlgorithmBFSTask implements Task {
                                         // read num of edges for calculating bottom up <-> top down switching formula
                                         m_edgeCountNextFrontier.addAndGet(neighbours.length);
 
-                                        vertex.setUserData(m_currentDepthLevel);
+                                        vertex.setDepth(m_currentDepthLevel);
                                         if (m_markVertices && !m_chunkService.put().put(vertex)) {
                                             LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
                                         }
@@ -1392,15 +1394,16 @@ public class GraphAlgorithmBFSTask implements Task {
                                 if (m_visitedFrontier.pushBack(neighborLocalId)) {
                                     m_nextFrontier.pushBack(neighborLocalId);
 
-                                    VertexSimple neighbour_vertex = new VertexSimple(neighbour);
+                                    Vertex neighbour_vertex = new Vertex();
+                                    neighbour_vertex.setID(neighbour);
                                     m_chunkService.get().get(neighbour_vertex);
-                                    neighbour_vertex.setUserData(m_currentDepthLevel);
+                                    neighbour_vertex.setDepth(m_currentDepthLevel);
                                     if (m_markVertices && !m_chunkService.put().put(neighbour_vertex)) {
                                         LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
                                     }
 
                                     // read num of edges for calculating bottom up <-> top down switching formula
-                                    int numEdges = neighbour_vertex.getNeighbours().length;
+                                    int numEdges = neighbour_vertex.getNeighbors().length;
                                     if (numEdges != -1) {
                                         m_edgeCountNextFrontier.addAndGet(numEdges);
                                     } else {

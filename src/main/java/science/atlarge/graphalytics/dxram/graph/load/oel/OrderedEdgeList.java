@@ -13,7 +13,7 @@
 
 package science.atlarge.graphalytics.dxram.graph.load.oel;
 
-import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 
 /**
  * Interface for an ordered edge list providing vertices.
@@ -27,5 +27,5 @@ public interface OrderedEdgeList {
      * Read vertex data. This does not re-base the vertex id or any ids of the neighbors.
      * @return VertexSimple read or null if no vertices are left to read.
      */
-    VertexSimple readVertex();
+    Vertex readVertex();
 }

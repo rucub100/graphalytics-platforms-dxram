@@ -40,7 +40,7 @@ import science.atlarge.graphalytics.execution.RunSpecification;
 import science.atlarge.graphalytics.dxram.DxramConfiguration;
 import science.atlarge.graphalytics.dxram.ProcTimeLog;
 import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
-import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadOrderedEdgeListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
@@ -203,9 +203,10 @@ public final class BreadthFirstSearchJob extends DxramJob {
 
 		for (long vid : GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.keySet()) {
 		    final long cid = GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.get(vid);
-			VertexSimple v = new VertexSimple(cid);
+			Vertex v = new Vertex();
+			v.setID(cid);
 			cls.getLocal().get(v);
-			long depth = v.getUserData();
+			long depth = v.getDepth();
 			if (depth == -1) depth = Long.MAX_VALUE;
 			output.append(String.format("%d %d", vid, depth));
 			output.append('\n');

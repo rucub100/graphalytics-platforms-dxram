@@ -45,6 +45,10 @@ public final class Vertex extends AbstractChunk {
         return m_neighbors;
     }
 
+    public void setNeighbors(long[] p_neighbors) {
+        m_neighbors = p_neighbors;
+    }
+
     @Override
     public void importObject(Importer p_importer) {
         m_depth = p_importer.readInt(m_depth);

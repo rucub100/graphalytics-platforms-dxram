@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import science.atlarge.graphalytics.dxram.graph.data.VertexSimple;
+import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, 14.02.2019
@@ -43,7 +43,7 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 	private final long m_endOffset;
 	private final long m_startVertexId;
 
-	private final LinkedList<VertexSimple> m_oel = new LinkedList<VertexSimple>();
+	private final LinkedList<Vertex> m_oel = new LinkedList<Vertex>();
 	private boolean m_loaded;
 
 	public GraphalyticsOrderedEdgeList(
@@ -95,8 +95,9 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 					while (srcId > currentVertexId.get()) {
 						VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
 						CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.getAndSet(vertexList.pop());
-						VertexSimple v = new VertexSimple(m_startVertexId + cnt.getAndIncrement());
-						neighbors.forEach(l -> v.addNeighbour(l));
+						Vertex v = new Vertex();
+						v.setID(m_startVertexId + cnt.getAndIncrement());
+						v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
 						neighbors.clear();
 						m_oel.add(v);
 					}
@@ -109,8 +110,9 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 			{
 				VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
 				CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.get();
-				VertexSimple v = new VertexSimple(m_startVertexId + cnt.getAndIncrement());
-				neighbors.forEach(l -> v.addNeighbour(l));
+				Vertex v = new Vertex();
+				v.setID(m_startVertexId + cnt.getAndIncrement());
+				v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
 				neighbors.clear();
 				m_oel.add(v);				
 			}
@@ -118,8 +120,9 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 				currentVertexId.set(vertexList.pop());
 				VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
 				CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.get();
-				VertexSimple v = new VertexSimple(m_startVertexId + cnt.getAndIncrement());
-				neighbors.forEach(l -> v.addNeighbour(l));
+				Vertex v = new Vertex();
+				v.setID(m_startVertexId + cnt.getAndIncrement());
+				v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
 				neighbors.clear();
 				m_oel.add(v);
 			}
@@ -129,15 +132,15 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 		}
 
 		// convert neighbors
-		for (VertexSimple v : m_oel) {
-			for (int i = 0; i < v.getNeighbours().length; i++) {
-				v.getNeighbours()[i] = VERTEX_ID_TO_CID.get(v.getNeighbours()[i]);
+		for (Vertex v : m_oel) {
+			for (int i = 0; i < v.getNeighbors().length; i++) {
+				v.getNeighbors()[i] = VERTEX_ID_TO_CID.get(v.getNeighbors()[i]);
 			}
 		}
 	}
 
 	@Override
-	public VertexSimple readVertex() {
+	public Vertex readVertex() {
 		if (!m_loaded) {
 			m_loaded = true;
 			loadFromVertexEdgeFile();
