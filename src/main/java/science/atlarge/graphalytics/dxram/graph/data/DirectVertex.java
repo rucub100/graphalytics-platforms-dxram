@@ -14,6 +14,7 @@
 package science.atlarge.graphalytics.dxram.graph.data;
 
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
+import de.hhu.bsinfo.dxram.chunk.ChunkService;
 import de.hhu.bsinfo.dxram.engine.DXRAMServiceAccessor;
 
 /**
@@ -23,14 +24,18 @@ import de.hhu.bsinfo.dxram.engine.DXRAMServiceAccessor;
 public final class DirectVertex implements AutoCloseable {
 
     private static final int OFFSET_DEPTH = 0;
-    private static final int OFFSET_NEIGHBORS = 4;
+    private static final int OFFSET_NEIGHBORS_LENGTH = 4;
+    private static final int OFFSET_NEIGHBORS_CID = 8;
+    private static final int OFFSET_NEIGHBORS_ADDR = 16;
 
     private static boolean INITIALIZED = false;
     private static ChunkLocalService CHUNK_LOCAL_SERVICE = null;
+    private static ChunkService CHUNK_SERVICE = null;
 
     public static void init(DXRAMServiceAccessor p_accessor) {
         if (!INITIALIZED) {
             CHUNK_LOCAL_SERVICE = p_accessor.getService(ChunkLocalService.class);
+            CHUNK_SERVICE = p_accessor.getService(ChunkService.class);
             INITIALIZED = true;
         }
     }
@@ -65,7 +70,34 @@ public final class DirectVertex implements AutoCloseable {
         CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(m_address, OFFSET_DEPTH, p_depth);
     }
 
-    // TODO neighbor get + indirection and list implementation
+    public long[] getNeighbors() {
+        int count = CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(m_address, OFFSET_NEIGHBORS_LENGTH);
+
+        if (count == 0) {
+            return new long[0];
+        }
+
+        long address = CHUNK_LOCAL_SERVICE.rawReadLocal().readLong(m_address, OFFSET_NEIGHBORS_ADDR);
+        return CHUNK_LOCAL_SERVICE.rawReadLocal().readLongArray(address, 0, count);
+    }
+
+    public void setNeighbors(long[] p_neighbors) {
+        // remove old array
+        long cid = CHUNK_LOCAL_SERVICE.rawReadLocal().readLong(m_address, OFFSET_NEIGHBORS_CID);
+        CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(cid);
+        CHUNK_SERVICE.remove().remove(cid);
+        // set new array
+        CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(m_address, OFFSET_NEIGHBORS_LENGTH, p_neighbors.length);
+        // TODO: fix dxram API, for now this workaround
+        long [] newCID = new long[1];
+        int created = CHUNK_LOCAL_SERVICE.createLocal().create(newCID, 1, p_neighbors.length);
+        if (created != 1) {
+            throw new RuntimeException("Failed to create a new chunk!");
+        }
+        CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(m_address, OFFSET_NEIGHBORS_CID, newCID[0]);
+        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(newCID[0]).getAddress();
+        CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(m_address, OFFSET_NEIGHBORS_ADDR, address);
+    }
 
     @Override
     public void close() throws Exception {
