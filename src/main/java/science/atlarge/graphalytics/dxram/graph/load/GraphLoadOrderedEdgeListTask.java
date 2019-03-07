@@ -348,9 +348,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 vertexBuffer = Arrays.copyOf(vertexBuffer, readCount);
             }
 
-            // TODO: createReservedLocal!
             m_chunkLocalService.createReservedLocal().create((AbstractChunk[]) vertexBuffer);
-
             int count = m_chunkService.put().put((AbstractChunk[]) vertexBuffer);
             
             if (count != readCount) {
