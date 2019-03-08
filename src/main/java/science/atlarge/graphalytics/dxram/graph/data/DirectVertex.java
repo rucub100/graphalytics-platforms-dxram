@@ -103,6 +103,7 @@ public final class DirectVertex implements AutoCloseable {
             CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_CID, newCID[0]);
             long address2 = CHUNK_LOCAL_SERVICE.pinningLocal().pin(newCID[0]).getAddress();
             CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_ADDR, address2);
+            CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLongArray(address2, 0, p_vertex.getNeighbors());
         }
         CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(cid[0]);
         return cid[0];
@@ -131,6 +132,42 @@ public final class DirectVertex implements AutoCloseable {
                 CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_CID, newCID[0]);
                 long address2 = CHUNK_LOCAL_SERVICE.pinningLocal().pin(newCID[0]).getAddress();
                 CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_ADDR, address2);
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLongArray(address2, 0, p_vertices[i].getNeighbors());
+            }
+            CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(cids[i]);            
+        }
+        return cids;
+    }
+
+    public static long[] createReserved(final Vertex[] p_vertices) {
+        long[] cids = new long[p_vertices.length];
+        int[] sizes = new int[p_vertices.length];
+        for (int i = 0; i < p_vertices.length; i++) {
+            cids[i] = p_vertices[i].getID();
+            sizes[i] = size();
+        }
+        int created = CHUNK_LOCAL_SERVICE.createReservedLocal().create(cids, cids.length, sizes);
+        if (created != p_vertices.length) {
+            throw new RuntimeException(String.format("Failed to create %d chunks!", p_vertices.length));
+        }
+        // initialize with default values
+        for (int i = 0; i < p_vertices.length; i++) {
+            long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(cids[i]).getAddress();
+            CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(address, OFFSET_DEPTH, p_vertices[i].getDepth());
+            CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(address, OFFSET_NEIGHBORS_LENGTH, p_vertices[i].getNeighbors().length);
+            if (p_vertices[i].getNeighbors().length == 0) {
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_CID, ChunkID.INVALID_ID);
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_ADDR, 0);
+            } else {
+                long [] newCID = new long[1];
+                created = CHUNK_LOCAL_SERVICE.createLocal().create(newCID, 1, Long.BYTES * p_vertices[i].getNeighbors().length);
+                if (created != 1) {
+                    throw new RuntimeException("Failed to create a new chunk!");
+                }
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_CID, newCID[0]);
+                long address2 = CHUNK_LOCAL_SERVICE.pinningLocal().pin(newCID[0]).getAddress();
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_ADDR, address2);
+                CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLongArray(address2, 0, p_vertices[i].getNeighbors());
             }
             CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(cids[i]);            
         }
@@ -190,6 +227,12 @@ public final class DirectVertex implements AutoCloseable {
         CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(p_cid);
     }
 
+    public static int getNeighborsLength(final long p_cid) {
+        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
+        return CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(address, OFFSET_NEIGHBORS_LENGTH);
+    }
+
+    // TODO getNeighbor(index)
     public static long[] getNeighbors(final long p_cid) {
         long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
         int count = CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(address, OFFSET_NEIGHBORS_LENGTH);

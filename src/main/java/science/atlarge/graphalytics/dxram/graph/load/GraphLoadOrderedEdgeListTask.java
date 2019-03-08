@@ -22,6 +22,7 @@ import com.google.gson.annotations.Expose;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import science.atlarge.graphalytics.dxram.graph.data.DirectVertex;
 import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
 import science.atlarge.graphalytics.dxram.graph.data.Vertex;
 import science.atlarge.graphalytics.dxram.graph.load.oel.GraphalyticsOrderedEdgeList;
@@ -348,15 +349,17 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 vertexBuffer = Arrays.copyOf(vertexBuffer, readCount);
             }
 
-            m_chunkLocalService.createReservedLocal().create((AbstractChunk[]) vertexBuffer);
-            int count = m_chunkService.put().put((AbstractChunk[]) vertexBuffer);
+            DirectVertex.init(m_ctx.getDXRAMServiceAccessor());
+            DirectVertex.createReserved(vertexBuffer);
+            //m_chunkLocalService.createReservedLocal().create((AbstractChunk[]) vertexBuffer);
+            //int count = m_chunkService.put().put((AbstractChunk[]) vertexBuffer);
             
-            if (count != readCount) {
-                // #if LOGGER >= ERROR
-                LOGGER.error("Putting vertex data for chunks failed: %d != %d", count, readCount);
-                // #endif /* LOGGER >= ERROR */
-                // return false;
-            }
+//            if (count != readCount) {
+//                // #if LOGGER >= ERROR
+//                LOGGER.error("Putting vertex data for chunks failed: %d != %d", count, readCount);
+//                // #endif /* LOGGER >= ERROR */
+//                // return false;
+//            }
 
             totalVerticesLoaded += readCount;
 

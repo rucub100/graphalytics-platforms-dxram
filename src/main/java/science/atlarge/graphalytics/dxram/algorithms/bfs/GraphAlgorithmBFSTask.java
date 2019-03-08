@@ -37,7 +37,7 @@ import science.atlarge.graphalytics.dxram.algorithms.bfs.messages.VerticesForNex
 import science.atlarge.graphalytics.dxram.graph.data.BFSResult;
 import science.atlarge.graphalytics.dxram.graph.data.GraphPartitionIndex;
 import science.atlarge.graphalytics.dxram.graph.data.GraphRootList;
-import science.atlarge.graphalytics.dxram.graph.data.Vertex;
+import science.atlarge.graphalytics.dxram.graph.data.DirectVertex;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadBFSRootListTask;
 import science.atlarge.graphalytics.dxram.graph.load.GraphLoadPartitionIndexTask;
 
@@ -82,10 +82,6 @@ public class GraphAlgorithmBFSTask implements Task {
     private int m_numberOfThreadsPerNode = 1;
     @Expose
     private boolean m_markVertices = true;
-    @Expose
-    private boolean m_beamerMode = false;
-    @Expose
-    private int m_beamerFormulaGraphEdgeDeg = 16;
     @Expose
     private boolean m_abortBFSOnError = true;
 
@@ -134,15 +130,12 @@ public class GraphAlgorithmBFSTask implements Task {
      *         Abort BFS execution on error or continue even on errors
      */
     public GraphAlgorithmBFSTask(final String p_bfsRootNameserviceEntry, final int p_vertexBatchSize, final int p_vertexMessageBatchSize,
-            final int p_numberOfThreadsPerNode, final boolean p_markVertices, final boolean p_beamerMode, final int p_beamerFormulaGraphEdgeDeg,
-            final boolean p_abortBFSOnError) {
+            final int p_numberOfThreadsPerNode, final boolean p_markVertices, final boolean p_abortBFSOnError) {
         m_bfsRootNameserviceEntry = p_bfsRootNameserviceEntry;
         m_vertexBatchSize = p_vertexBatchSize;
         m_vertexMessageBatchSize = p_vertexMessageBatchSize;
         m_numberOfThreadsPerNode = p_numberOfThreadsPerNode;
         m_markVertices = p_markVertices;
-        m_beamerMode = p_beamerMode;
-        m_beamerFormulaGraphEdgeDeg = p_beamerFormulaGraphEdgeDeg;
         m_abortBFSOnError = p_abortBFSOnError;
     }
 
@@ -256,10 +249,6 @@ public class GraphAlgorithmBFSTask implements Task {
         }
         // #endif /* LOGGER >= INFO */
 
-        // #if LOGGER >= INFO
-        LOGGER.info("BFS mode: %s", m_beamerMode ? "BEAMER" : "TOP DOWN ONLY");
-        // #endif /* LOGGER >= INFO */
-
         int iteration = 0;
         for (long root : rootList.getRoots()) {
             if (m_signalAbortTriggered) {
@@ -285,7 +274,7 @@ public class GraphAlgorithmBFSTask implements Task {
 
             m_curBFS.init(m_graphPartitionIndex.getPartitionIndex(m_ctx.getCtxData().getSlaveId()).getVertexCount(), m_markVertices);
             // TODO: FIX THIS LATER!!!
-            if (ChunkID.getCreatorID(root) == m_nodeId || true) {
+            if (ChunkID.getCreatorID(root) == m_nodeId) {
                 m_curBFS.execute(root);
             } else {
                 m_curBFS.execute(ChunkID.INVALID_ID);
@@ -339,8 +328,9 @@ public class GraphAlgorithmBFSTask implements Task {
 
     @Override
     public int sizeofObject() {
-        return ObjectSizeUtil.sizeofString(m_bfsRootNameserviceEntry) + Integer.BYTES * 3 + 2 * ObjectSizeUtil.sizeofBoolean() + Integer.BYTES +
-                ObjectSizeUtil.sizeofBoolean();
+        return ObjectSizeUtil.sizeofString(m_bfsRootNameserviceEntry) +
+                3 * Integer.BYTES +
+                2 * ObjectSizeUtil.sizeofBoolean();
     }
 
     @Override
@@ -350,8 +340,6 @@ public class GraphAlgorithmBFSTask implements Task {
         p_exporter.writeInt(m_vertexMessageBatchSize);
         p_exporter.writeInt(m_numberOfThreadsPerNode);
         p_exporter.writeBoolean(m_markVertices);
-        p_exporter.writeBoolean(m_beamerMode);
-        p_exporter.writeInt(m_beamerFormulaGraphEdgeDeg);
         p_exporter.writeBoolean(m_abortBFSOnError);
     }
 
@@ -362,8 +350,6 @@ public class GraphAlgorithmBFSTask implements Task {
         m_vertexMessageBatchSize = p_importer.readInt(m_vertexMessageBatchSize);
         m_numberOfThreadsPerNode = p_importer.readInt(m_numberOfThreadsPerNode);
         m_markVertices = p_importer.readBoolean(m_markVertices);
-        m_beamerMode = p_importer.readBoolean(m_beamerMode);
-        m_beamerFormulaGraphEdgeDeg = p_importer.readInt(m_beamerFormulaGraphEdgeDeg);
         m_abortBFSOnError = p_importer.readBoolean(m_abortBFSOnError);
     }
 
@@ -466,7 +452,6 @@ public class GraphAlgorithmBFSTask implements Task {
          *         Root vertex id to start BFS at.
          */
         void execute(final long p_entryVertex) {
-            boolean bottomUpApproach = false;
             long numEdgesInNextFrontier;
 
             // values to calculate top down <-> bottom up switching
@@ -480,31 +465,31 @@ public class GraphAlgorithmBFSTask implements Task {
                 LOGGER.info("I am starting BFS with entry vertex 0x%X", p_entryVertex);
                 // #endif /* LOGGER >= INFO */
 
-                Vertex vertex = new Vertex();
-                vertex.setID(p_entryVertex);
-                if (!m_chunkService.get().get(vertex)) {
-                    LOGGER.error("Getting root vertex 0x%X failed", p_entryVertex);
-                    // signal all other slaves to terminate (error)
-                    m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-                    return;
-                }
+//                Vertex vertex = new Vertex();
+//                vertex.setID(p_entryVertex);
+//                if (!m_chunkService.get().get(vertex)) {
+//                    LOGGER.error("Getting root vertex 0x%X failed", p_entryVertex);
+//                    // signal all other slaves to terminate (error)
+//                    m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
+//                    return;
+//                }
 
                 // mark root visited
                 if (m_markVisited) {
                     // mark data mode
-                	vertex.setDepth(m_bfsLocalResult.m_totalBFSDepth);
-                    //if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
-                    if (!m_chunkService.put().put(vertex)) {
-                        LOGGER.error("Marking root vertex 0x%X failed", p_entryVertex);
-                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-                        return;
-                    }
+                	DirectVertex.setDepth(p_entryVertex, m_bfsLocalResult.m_totalBFSDepth);
+//                    //if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
+//                    if (!m_chunkService.put().put(vertex)) {
+//                        LOGGER.error("Marking root vertex 0x%X failed", p_entryVertex);
+//                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
+//                        return;
+//                    }
                 }
 
                 m_visitedFrontier.pushBack(ChunkID.getLocalID(p_entryVertex));
                 m_visitedFrontier.popFrontReset();
 
-                numEdgesInNextFrontier = vertex.getNeighbors().length;
+                numEdgesInNextFrontier = DirectVertex.getNeighborsLength(p_entryVertex);
 
                 m_curFrontier.pushBack(ChunkID.getLocalID(p_entryVertex));
 
@@ -520,33 +505,15 @@ public class GraphAlgorithmBFSTask implements Task {
             m_statisticsThread.start();
 
             while (true) {
-                if (m_beamerMode) {
-                    // determine bfs approach for next iteration
-                    // formula taken from beamer's "Distributed Memory Breadth-First Search Revisited:
-                    // Enabling Bottom-Up Search"
-//                    if (bottomUpApproach) {
-//                        // last iteration was bottom up approach, check if we should switch
-//                        if (fullGraphNextFrontVertexCount < fullGraphVertexCount / 14 * m_beamerFormulaGraphEdgeDeg) {
-//                            bottomUpApproach = false;
-//                        }
-//                    } else {
-//                        // last iteration was top down approach, check if we should switch
-//                        if (fullGraphNextFrontEdgeCount > fullGraphEdgeCount / 10) {
-//                            bottomUpApproach = true;
-//                        }
-//                    }
-                    bottomUpApproach = false;
-                }
-
                 LOGGER.info("BFS iteration %s, curFront size: %d, numEdgesInFrontier %d, vertex count %d, edge count %d",
-                        bottomUpApproach ? "BOTTOM UP" : "TOP DOWN", fullGraphNextFrontVertexCount, fullGraphNextFrontEdgeCount, fullGraphVertexCount,
+                        "TOP DOWN", fullGraphNextFrontVertexCount, fullGraphNextFrontEdgeCount, fullGraphVertexCount,
                         fullGraphEdgeCount);
 
                 // kick off threads with current frontier
                 for (BFSThread thread : m_threads) {
                     // update current level for marking
                     thread.setCurrentBFSDepthLevel(m_bfsLocalResult.m_totalBFSDepth);
-                    thread.runIteration(bottomUpApproach);
+                    thread.runIteration();
                 }
 
                 // reset local counter
@@ -816,15 +783,15 @@ public class GraphAlgorithmBFSTask implements Task {
                     if (m_visitedFrontier.pushBack(localId)) {
                         m_nextFrontier.pushBack(localId);
                         
-                        Vertex vertex = new Vertex();
-                        vertex.setID(vertexId);
-                        m_chunkService.get().get(vertex);
+//                        Vertex vertex = new Vertex();
+//                        vertex.setID(vertexId);
+//                        m_chunkService.get().get(vertex);
                         if (m_markVisited) {
-                        	vertex.setDepth(m_bfsLocalResult.m_totalBFSDepth);
+                        	DirectVertex.setDepth(vertexId, m_bfsLocalResult.m_totalBFSDepth);
                         }
 
                         // read num of edges for calculating bottom up <-> top down switching formula
-                        int numEdges = vertex.getNeighbors().length;
+                        int numEdges = DirectVertex.getNeighborsLength(vertexId);
                         if (numEdges != -1) {
                             m_edgeCountNextFrontier.addAndGet(numEdges);
                         } else {
@@ -1032,13 +999,12 @@ public class GraphAlgorithmBFSTask implements Task {
         private ConcurrentBitVectorHybrid m_visitedFrontier;
 
         private short m_nodeId;
-        private Vertex[] m_vertexBatch;
+        private long[] m_vertexBatch;
         private int m_currentDepthLevel;
         private VerticesForNextFrontierMessage[] m_remoteMessages = new VerticesForNextFrontierMessage[NodeID.MAX_ID];
 
         private volatile boolean m_runIteration;
         private volatile boolean m_exitThread;
-        private volatile boolean m_bottomUpIteration;
         private AtomicLong m_edgeCountNextFrontier = new AtomicLong(0);
 
         private AtomicLong m_sharedVertexCounter;
@@ -1079,12 +1045,12 @@ public class GraphAlgorithmBFSTask implements Task {
             m_visitedFrontier = p_visitedFrontierShared;
 
             m_nodeId = m_bootService.getNodeID();
-            m_vertexBatch = new Vertex[p_vertexBatchSize];
-            for (int i = 0; i < m_vertexBatch.length; i++) {
-                m_vertexBatch[i] = new Vertex();
-                // performance hack: if writing back, we only write back what we changed
-                // TODO m_vertexBatch[i].setWriteUserDataOnly(true);
-            }
+            m_vertexBatch = new long[p_vertexBatchSize];
+//            for (int i = 0; i < m_vertexBatch.length; i++) {
+//                m_vertexBatch[i] = new Vertex();
+//                // performance hack: if writing back, we only write back what we changed
+//                // TODO m_vertexBatch[i].setWriteUserDataOnly(true);
+//            }
 
             m_sharedVertexCounter = p_sharedVertexCounter;
             m_sharedEdgeCounter = p_sharedEdgeCounter;
@@ -1108,8 +1074,7 @@ public class GraphAlgorithmBFSTask implements Task {
          * @param p_bottomUpIteration
          *         BFS direction for this iteration
          */
-        void runIteration(final boolean p_bottomUpIteration) {
-            m_bottomUpIteration = p_bottomUpIteration;
+        void runIteration() {
             m_edgeCountNextFrontier.set(0);
             m_runIteration = true;
         }
@@ -1174,43 +1139,21 @@ public class GraphAlgorithmBFSTask implements Task {
 
                 int validVertsInBatch = 0;
 
-                if (m_bottomUpIteration) {
-                    m_visitedFrontier.popFrontLock();
-                    for (Vertex vertexBatch : m_vertexBatch) {
-                        long tmp = m_visitedFrontier.popFrontInverse();
-                        // 0 is the index chunk, re-pop
-                        if (tmp == 0) {
-                            tmp = m_visitedFrontier.popFrontInverse();
+                m_curFrontier.popFrontLock();
+                for (int i = 0; i < m_vertexBatch.length; i++) {
+                    long tmp = m_curFrontier.popFront();
+                    if (tmp != -1) {
+                        m_vertexBatch[i] = ChunkID.getChunkID(m_nodeId, tmp);
+                        validVertsInBatch++;
+                    } else {
+                        if (validVertsInBatch == 0) {
+                            enterIdle = true;
+                            break;
                         }
-                        if (tmp != -1) {
-                            vertexBatch.setID(ChunkID.getChunkID(m_nodeId, tmp));
-                            validVertsInBatch++;
-                        } else {
-                            if (validVertsInBatch == 0) {
-                                enterIdle = true;
-                                break;
-                            }
-                            vertexBatch.setID(ChunkID.INVALID_ID);
-                        }
+                        m_vertexBatch[i] = ChunkID.INVALID_ID;
                     }
-                    m_visitedFrontier.popFrontUnlock();
-                } else {
-                    m_curFrontier.popFrontLock();
-                    for (Vertex vertexBatch : m_vertexBatch) {
-                        long tmp = m_curFrontier.popFront();
-                        if (tmp != -1) {
-                            vertexBatch.setID(ChunkID.getChunkID(m_nodeId, tmp));
-                            validVertsInBatch++;
-                        } else {
-                            if (validVertsInBatch == 0) {
-                                enterIdle = true;
-                                break;
-                            }
-                            vertexBatch.setID(ChunkID.INVALID_ID);
-                        }
-                    }
-                    m_curFrontier.popFrontUnlock();
                 }
+                m_curFrontier.popFrontUnlock();
 
                 // --------------------------------------------------
 
@@ -1249,37 +1192,37 @@ public class GraphAlgorithmBFSTask implements Task {
                 // --------------------------------------------------
 
                 // TODO(RC): What lock operation is necessary?
-                int gett = m_chunkLocalService.getLocal().get(0, validVertsInBatch, ChunkLockOperation.NONE, m_vertexBatch);
-                if (gett != validVertsInBatch) {
-                    // #if LOGGER >= ERROR
-                    LOGGER.error("Error on getting vertices in BFS Thread %d: %d != %d", m_id, gett, validVertsInBatch);
-                    // #endif /* LOGGER >= ERROR */
-                    if (m_abortBFSOnError) {
-                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-                        return;
-                    }
-                }
+//                int gett = m_chunkLocalService.getLocal().get(0, validVertsInBatch, ChunkLockOperation.NONE, m_vertexBatch);
+//                if (gett != validVertsInBatch) {
+//                    // #if LOGGER >= ERROR
+//                    LOGGER.error("Error on getting vertices in BFS Thread %d: %d != %d", m_id, gett, validVertsInBatch);
+//                    // #endif /* LOGGER >= ERROR */
+//                    if (m_abortBFSOnError) {
+//                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
+//                        return;
+//                    }
+//                }
 
                 // --------------------------------------------------
 
                 for (int i = 0; i < validVertsInBatch; i++) {
                     // check first if visited
-                    Vertex vertex = m_vertexBatch[i];
+//                    Vertex vertex = m_vertexBatch[i];
 
                     // skip vertices that were already marked invalid before
-                    if (vertex.getID() == ChunkID.INVALID_ID) {
+                    if (m_vertexBatch[i] == ChunkID.INVALID_ID) {
                         continue;
                     }
 
                     m_sharedVertexCounter.incrementAndGet();
 
-                    long[] neighbours = vertex.getNeighbors();
-                    long vertexLocalId = ChunkID.getLocalID(vertex.getID());
+                    long[] neighbours = DirectVertex.getNeighbors(m_vertexBatch[i]);
+                    long vertexLocalId = ChunkID.getLocalID(m_vertexBatch[i]);
                     for (long neighbour : neighbours) {
                         // check if neighbors are valid, otherwise something's not ok with the data
                         if (neighbour == ChunkID.INVALID_ID) {
                             // #if LOGGER >= WARN
-                            LOGGER.warn("Invalid neighbor found on vertex %s", vertex);
+                            LOGGER.warn("Invalid neighbor found on vertex %d", m_vertexBatch[i]);
                             // #endif /* LOGGER >= WARN */
                             continue;
                         }
@@ -1287,7 +1230,7 @@ public class GraphAlgorithmBFSTask implements Task {
                         // don't allow access to the index chunk
                         if (ChunkID.getLocalID(neighbour) == 0) {
                             // #if LOGGER >= WARN
-                            LOGGER.warn("Neighbor id refers to index chunk 0x%X, vertex %s", neighbour, vertex);
+                            LOGGER.warn("Neighbor id refers to index chunk 0x%X, vertex %d", neighbour, m_vertexBatch[i]);
                             // #endif /* LOGGER >= WARN */
                             continue;
                         }
@@ -1298,122 +1241,60 @@ public class GraphAlgorithmBFSTask implements Task {
                         short neighborCreatorId = ChunkID.getCreatorID(neighbour);
                         long neighborLocalId = ChunkID.getLocalID(neighbour);
 
-                        if (m_bottomUpIteration) {
-                            if (neighborCreatorId != m_nodeId) {
-                                // the child is on the current node but its parent is on a different one
-                                // => inter node edge
+                        if (neighborCreatorId != m_nodeId) {
+                            // delegate to remote, fill message buffers until they are full -> send
+                            VerticesForNextFrontierMessage msg = m_remoteMessages[neighborCreatorId & 0xFFFF];
+                            if (msg == null) {
+                                msg = new VerticesForNextFrontierMessage(neighborCreatorId, m_vertexMessageBatchSize);
 
-                                // delegate to remote, fill message buffers until they are full -> send
-                                VerticesForNextFrontierMessage msg = m_remoteMessages[neighborCreatorId & 0xFFFF];
-                                if (msg == null) {
-                                    msg = new VerticesForNextFrontierMessage(neighborCreatorId, m_vertexMessageBatchSize);
+                                m_remoteMessages[neighborCreatorId & 0xFFFF] = msg;
+                            }
 
-                                    m_remoteMessages[neighborCreatorId & 0xFFFF] = msg;
-                                }
-
-                                // add vertex to message batch
-                                if (!msg.addVertex(vertex.getID())) {
-                                    // vertex does not fit anymore, full
-                                    try {
-                                        m_networkService.sendMessage(msg);
-                                    } catch (final NetworkException e) {
-                                        // #if LOGGER >= ERROR
-                                        LOGGER.error("Sending vertex message to node 0x%X failed", neighborCreatorId);
-                                        // #endif /* LOGGER >= ERROR */
-                                        if (m_abortBFSOnError) {
-                                            m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-                                            return;
-                                        }
-                                    }
-
-                                    m_syncBFSFinished.incrementSentVertexMsgCountLocal();
-
-                                    msg.reset();
-                                    m_remoteMessages[neighborCreatorId & 0xFFFF] = msg;
-                                    msg.addVertex(vertex.getID());
-                                    msg.addNeighbor(neighbour);
-                                } else {
-                                    msg.addNeighbor(neighbour);
-                                }
-                            } else {
-                                // is our child connected to any of the parents
-                                if (m_curFrontier.contains(neighborLocalId)) {
-                                    // child -> parent relationship, got our next vertex
-                                    // mark child (!) visited
-                                    if (m_visitedFrontier.pushBack(vertexLocalId)) {
-                                        m_nextFrontier.pushBack(vertexLocalId);
-
-                                        // read num of edges for calculating bottom up <-> top down switching formula
-                                        m_edgeCountNextFrontier.addAndGet(neighbours.length);
-
-                                        vertex.setDepth(m_currentDepthLevel);
-                                        if (m_markVertices && !m_chunkService.put().put(vertex)) {
-                                            LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
-                                        }
-
-                                        // we don't have to continue with any other neighbors
-                                        // for all neighbors (possible parents) of child
-                                        break;
+                            // add vertex to message batch
+                            if (!msg.addVertex(neighbour)) {
+                                // neighbor does not fit anymore, full
+                                try {
+                                    m_networkService.sendMessage(msg);
+                                } catch (final NetworkException e) {
+                                    // #if LOGGER >= ERROR
+                                    LOGGER.error("Sending vertex message to node 0x%X failed", neighborCreatorId);
+                                    // #endif /* LOGGER >= ERROR */
+                                    if (m_abortBFSOnError) {
+                                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
+                                        return;
                                     }
                                 }
+
+                                m_syncBFSFinished.incrementSentVertexMsgCountLocal();
+
+                                // re-use messages
+                                msg.reset();
+                                m_remoteMessages[msg.getDestination() & 0xFFFF] = msg;
+                                msg.addVertex(neighbour);
                             }
                         } else {
-                            if (neighborCreatorId != m_nodeId) {
-                                // delegate to remote, fill message buffers until they are full -> send
-                                VerticesForNextFrontierMessage msg = m_remoteMessages[neighborCreatorId & 0xFFFF];
-                                if (msg == null) {
-                                    msg = new VerticesForNextFrontierMessage(neighborCreatorId, m_vertexMessageBatchSize);
+                            // mark visited and add to next if not visited so far
+                            if (m_visitedFrontier.pushBack(neighborLocalId)) {
+                                m_nextFrontier.pushBack(neighborLocalId);
 
-                                    m_remoteMessages[neighborCreatorId & 0xFFFF] = msg;
+//                                Vertex neighbour_vertex = new Vertex();
+//                                neighbour_vertex.setID(neighbour);
+//                                m_chunkService.get().get(neighbour_vertex);
+                                DirectVertex.setDepth(neighbour, m_currentDepthLevel);
+//                                if (m_markVertices && !m_chunkService.put().put(neighbour_vertex)) {
+//                                    LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
+//                                }
+
+                                // read num of edges for calculating bottom up <-> top down switching formula
+                                int numEdges = DirectVertex.getNeighborsLength(neighbour);
+                                if (numEdges != -1) {
+                                    m_edgeCountNextFrontier.addAndGet(numEdges);
+                                } else {
+                                    LOGGER.error("Could not read num neighbors field of vertex 0x%X", neighbour);
                                 }
-
-                                // add vertex to message batch
-                                if (!msg.addVertex(neighbour)) {
-                                    // neighbor does not fit anymore, full
-                                    try {
-                                        m_networkService.sendMessage(msg);
-                                    } catch (final NetworkException e) {
-                                        // #if LOGGER >= ERROR
-                                        LOGGER.error("Sending vertex message to node 0x%X failed", neighborCreatorId);
-                                        // #endif /* LOGGER >= ERROR */
-                                        if (m_abortBFSOnError) {
-                                            m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-                                            return;
-                                        }
-                                    }
-
-                                    m_syncBFSFinished.incrementSentVertexMsgCountLocal();
-
-                                    // re-use messages
-                                    msg.reset();
-                                    m_remoteMessages[msg.getDestination() & 0xFFFF] = msg;
-                                    msg.addVertex(neighbour);
-                                }
-                            } else {
-                                // mark visited and add to next if not visited so far
-                                if (m_visitedFrontier.pushBack(neighborLocalId)) {
-                                    m_nextFrontier.pushBack(neighborLocalId);
-
-                                    Vertex neighbour_vertex = new Vertex();
-                                    neighbour_vertex.setID(neighbour);
-                                    m_chunkService.get().get(neighbour_vertex);
-                                    neighbour_vertex.setDepth(m_currentDepthLevel);
-                                    if (m_markVertices && !m_chunkService.put().put(neighbour_vertex)) {
-                                        LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
-                                    }
-
-                                    // read num of edges for calculating bottom up <-> top down switching formula
-                                    int numEdges = neighbour_vertex.getNeighbors().length;
-                                    if (numEdges != -1) {
-                                        m_edgeCountNextFrontier.addAndGet(numEdges);
-                                    } else {
-                                        LOGGER.error("Could not read num neighbors field of vertex 0x%X", neighbour);
-                                    }
-
-                                }
-
                             }
                         }
+                        
                     }
                 }
             }
