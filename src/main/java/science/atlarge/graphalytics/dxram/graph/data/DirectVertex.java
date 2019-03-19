@@ -168,8 +168,7 @@ public final class DirectVertex implements AutoCloseable {
                 long address2 = CHUNK_LOCAL_SERVICE.pinningLocal().pin(newCID[0]).getAddress();
                 CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLong(address, OFFSET_NEIGHBORS_ADDR, address2);
                 CHUNK_LOCAL_SERVICE.rawWriteLocal().writeLongArray(address2, 0, p_vertices[i].getNeighbors());
-            }
-            CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(cids[i]);            
+            }          
         }
         return cids;
     }
@@ -215,36 +214,38 @@ public final class DirectVertex implements AutoCloseable {
     }
 
     public static int getDepth(final long p_cid) {
-        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
-        int depth = CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(address, OFFSET_DEPTH);
-        CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(p_cid);
-        return depth;
+        return CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(
+                CHUNK_LOCAL_SERVICE.pinningLocal().translate(p_cid),
+                OFFSET_DEPTH);
     }
 
     public static void setDepth(final long p_cid, final int p_depth) {
-        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
-        CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(address, OFFSET_DEPTH, p_depth);
-        CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(p_cid);
+        CHUNK_LOCAL_SERVICE.rawWriteLocal().writeInt(
+                CHUNK_LOCAL_SERVICE.pinningLocal().translate(p_cid),
+                OFFSET_DEPTH, p_depth);
     }
 
     public static int getNeighborsLength(final long p_cid) {
-        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
-        return CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(address, OFFSET_NEIGHBORS_LENGTH);
+        return CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(
+                CHUNK_LOCAL_SERVICE.pinningLocal().translate(p_cid),
+                OFFSET_NEIGHBORS_LENGTH);
     }
 
     // TODO getNeighbor(index)
     public static long[] getNeighbors(final long p_cid) {
-        long address = CHUNK_LOCAL_SERVICE.pinningLocal().pin(p_cid).getAddress();
-        int count = CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(address, OFFSET_NEIGHBORS_LENGTH);
+        final long address = CHUNK_LOCAL_SERVICE.pinningLocal().translate(p_cid);
+        int count = CHUNK_LOCAL_SERVICE.rawReadLocal().readInt(
+                address,
+                OFFSET_NEIGHBORS_LENGTH);
 
         if (count == 0) {
-            CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(p_cid);
             return new long[0];
         }
 
-        long address2 = CHUNK_LOCAL_SERVICE.rawReadLocal().readLong(address, OFFSET_NEIGHBORS_ADDR);
-        CHUNK_LOCAL_SERVICE.pinningLocal().unpinCID(p_cid);
-        return CHUNK_LOCAL_SERVICE.rawReadLocal().readLongArray(address2, 0, count);
+        return CHUNK_LOCAL_SERVICE.rawReadLocal().readLongArray(
+                CHUNK_LOCAL_SERVICE.rawReadLocal().readLong(address, OFFSET_NEIGHBORS_ADDR),
+                0,
+                count);
     }
 
     public static void setNeighbors(final long p_cid, final long[] p_neighbors) {

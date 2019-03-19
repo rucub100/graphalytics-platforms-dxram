@@ -465,25 +465,10 @@ public class GraphAlgorithmBFSTask implements Task {
                 LOGGER.info("I am starting BFS with entry vertex 0x%X", p_entryVertex);
                 // #endif /* LOGGER >= INFO */
 
-//                Vertex vertex = new Vertex();
-//                vertex.setID(p_entryVertex);
-//                if (!m_chunkService.get().get(vertex)) {
-//                    LOGGER.error("Getting root vertex 0x%X failed", p_entryVertex);
-//                    // signal all other slaves to terminate (error)
-//                    m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-//                    return;
-//                }
-
                 // mark root visited
                 if (m_markVisited) {
                     // mark data mode
                 	DirectVertex.setDepth(p_entryVertex, m_bfsLocalResult.m_totalBFSDepth);
-//                    //if (!m_chunkMemoryService.writeInt(vertex.getID(), 0, m_bfsLocalResult.m_totalBFSDepth)) {
-//                    if (!m_chunkService.put().put(vertex)) {
-//                        LOGGER.error("Marking root vertex 0x%X failed", p_entryVertex);
-//                        m_ctx.getSignalInterface().sendSignalToMaster(Signal.SIGNAL_ABORT);
-//                        return;
-//                    }
                 }
 
                 m_visitedFrontier.pushBack(ChunkID.getLocalID(p_entryVertex));
@@ -1277,13 +1262,7 @@ public class GraphAlgorithmBFSTask implements Task {
                             if (m_visitedFrontier.pushBack(neighborLocalId)) {
                                 m_nextFrontier.pushBack(neighborLocalId);
 
-//                                Vertex neighbour_vertex = new Vertex();
-//                                neighbour_vertex.setID(neighbour);
-//                                m_chunkService.get().get(neighbour_vertex);
                                 DirectVertex.setDepth(neighbour, m_currentDepthLevel);
-//                                if (m_markVertices && !m_chunkService.put().put(neighbour_vertex)) {
-//                                    LOGGER.error("Marking vertex 0x%X failed", vertexLocalId);
-//                                }
 
                                 // read num of edges for calculating bottom up <-> top down switching formula
                                 int numEdges = DirectVertex.getNeighborsLength(neighbour);
