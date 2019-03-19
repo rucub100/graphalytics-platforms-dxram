@@ -17,7 +17,7 @@ import de.hhu.bsinfo.dxmem.core.Address;
 import de.hhu.bsinfo.dxmem.data.ChunkID;
 import de.hhu.bsinfo.dxram.chunk.ChunkLocalService;
 import de.hhu.bsinfo.dxram.chunk.ChunkService;
-import de.hhu.bsinfo.dxram.engine.DXRAMServiceAccessor;
+import de.hhu.bsinfo.dxram.engine.ServiceProvider;
 
 /**
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, 05.03.2019
@@ -34,7 +34,7 @@ public final class DirectVertex implements AutoCloseable {
     private static ChunkLocalService CHUNK_LOCAL_SERVICE = null;
     private static ChunkService CHUNK_SERVICE = null;
 
-    public static void init(DXRAMServiceAccessor p_accessor) {
+    public static void init(ServiceProvider p_accessor) {
         if (!INITIALIZED) {
             CHUNK_LOCAL_SERVICE = p_accessor.getService(ChunkLocalService.class);
             CHUNK_SERVICE = p_accessor.getService(ChunkService.class);

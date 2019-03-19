@@ -16,7 +16,7 @@
  */
 package science.atlarge.graphalytics.dxram.job;
 
-import de.hhu.bsinfo.dxram.job.AbstractJob;
+import de.hhu.bsinfo.dxram.job.Job;
 import de.hhu.bsinfo.dxutils.serialization.Exporter;
 import de.hhu.bsinfo.dxutils.serialization.Importer;
 import de.hhu.bsinfo.dxutils.serialization.ObjectSizeUtil;
@@ -26,7 +26,7 @@ import science.atlarge.graphalytics.dxram.DxramConfiguration;
  * @author Ruslan Curbanov, ruslan.curbanov@uni-duesseldorf.de, December 27, 2018
  *
  */
-public abstract class GraphalyticsAbstractJob extends AbstractJob {
+public abstract class GraphalyticsAbstractJob extends Job {
 
 	protected String jobId;
 	protected String logPath;
