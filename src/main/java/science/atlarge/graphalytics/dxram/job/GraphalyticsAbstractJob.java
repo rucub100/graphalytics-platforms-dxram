@@ -32,6 +32,8 @@ public abstract class GraphalyticsAbstractJob extends Job {
 	protected String logPath;
 	protected String vertexPath;
 	protected String edgePath;
+	protected String loadedPath;
+	protected int m_numberOfVertices;
 	protected String outputPath;
 
 	protected DxramConfiguration platformConfig;
@@ -43,13 +45,17 @@ public abstract class GraphalyticsAbstractJob extends Job {
 			String logPath,
 			String vertexPath,
 			String edgePath,
+			String loadedPath,
+			int p_numberOfVertices,
 			String outputPath,
 			DxramConfiguration platformConfig) {
 		this.jobId = jobId;
 		this.logPath = logPath;
 		this.vertexPath = vertexPath;
 		this.edgePath = edgePath;
+		this.loadedPath = loadedPath;
 		this.outputPath = outputPath;
+		this.m_numberOfVertices = p_numberOfVertices;
 		this.platformConfig = platformConfig;
 	}
 	
@@ -59,6 +65,8 @@ public abstract class GraphalyticsAbstractJob extends Job {
 				ObjectSizeUtil.sizeofString(this.logPath) +
 				ObjectSizeUtil.sizeofString(this.vertexPath) +
 				ObjectSizeUtil.sizeofString(this.edgePath) +
+				ObjectSizeUtil.sizeofString(this.loadedPath) +
+				Integer.BYTES +
 				ObjectSizeUtil.sizeofString(this.outputPath) +
 				this.platformConfig.sizeofObject() + 
 				super.sizeofObject();
@@ -70,7 +78,9 @@ public abstract class GraphalyticsAbstractJob extends Job {
 		p_exporter.writeString(this.jobId);
 		p_exporter.writeString(this.logPath);
 		p_exporter.writeString(this.vertexPath);
-		p_exporter.writeString(this.edgePath);
+        p_exporter.writeString(this.edgePath);
+        p_exporter.writeString(this.loadedPath);
+        p_exporter.writeInt(m_numberOfVertices);
 		p_exporter.writeString(this.outputPath);
 		p_exporter.exportObject(this.platformConfig);
 	}
@@ -81,7 +91,9 @@ public abstract class GraphalyticsAbstractJob extends Job {
 		this.jobId = p_importer.readString(this.jobId);
 		this.logPath = p_importer.readString(this.logPath);
 		this.vertexPath = p_importer.readString(this.vertexPath);
-		this.edgePath = p_importer.readString(this.edgePath);
+        this.edgePath = p_importer.readString(this.edgePath);
+        this.loadedPath = p_importer.readString(this.loadedPath);
+        m_numberOfVertices = p_importer.readInt(m_numberOfVertices);
 		this.outputPath = p_importer.readString(this.outputPath);
 		p_importer.importObject(this.platformConfig);
 	}

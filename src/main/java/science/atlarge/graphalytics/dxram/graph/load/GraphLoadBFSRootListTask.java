@@ -42,7 +42,7 @@ import de.hhu.bsinfo.dxutils.serialization.Importer;
  */
 public class GraphLoadBFSRootListTask implements Task {
 
-    private static final Logger LOGGER = LogManager.getFormatterLogger(GraphLoadBFSRootListTask.class.getSimpleName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String MS_BFS_ROOTS = "BFS";
 
@@ -260,7 +260,9 @@ public class GraphLoadBFSRootListTask implements Task {
                 break;
             }
 
+            LOGGER.error(String.format("LOAD ROOT VERTEX-CID: 0x%x", root));
             long vertexId = p_graphPartitionIndex.rebaseGlobalVertexIdToLocalPartitionVertexId(root);
+            LOGGER.error(String.format("REBASE ROOT VERTEX-CID: 0x%x", vertexId));
             if (vertexId == ChunkID.INVALID_ID) {
                 LOGGER.error("Rebasing of 0x%X failed out of vertex id range of graph", root);
             }

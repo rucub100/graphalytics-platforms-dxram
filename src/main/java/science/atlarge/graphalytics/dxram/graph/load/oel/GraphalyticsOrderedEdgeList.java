@@ -12,10 +12,13 @@
  */
 package science.atlarge.graphalytics.dxram.graph.load.oel;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -36,100 +39,44 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 	public static Map<Long, Long> VERTEX_ID_TO_CID = new HashMap<Long, Long>();
 	
 
-	private final String m_vertexPath;
-	private final String m_edgePath;
-	// TODO: private final int m_bufferSize;
-	private final long m_startOffset;
-	private final long m_endOffset;
-	private final long m_startVertexId;
+	private final String m_boelPath;
+	private final int m_numberOfVertices;
 
 	private final LinkedList<Vertex> m_oel = new LinkedList<Vertex>();
 	private boolean m_loaded;
 
 	public GraphalyticsOrderedEdgeList(
-			final String p_vertexPath,
-			final String p_edgePath,
-			final long p_startOffset,
-			final long p_endOffset,
-			final long p_startVertexId) {
-		m_vertexPath = p_vertexPath;
-		m_edgePath = p_edgePath;
-		m_startOffset = p_startOffset;
-		m_endOffset = p_endOffset;
-		m_startVertexId = p_startVertexId;
-
+			final String p_boelPath,
+			final int p_numberOfVertices) {
+	    m_boelPath = p_boelPath;
+	    m_numberOfVertices = p_numberOfVertices;
 		m_loaded = false;
 	}
 
-	private void loadFromVertexEdgeFile() {
-		// read vertex file
-		final LinkedList<Long> vertexList = new LinkedList<Long>();
-		try (Stream<String> stream = Files.lines(Paths.get(m_vertexPath), StandardCharsets.US_ASCII)) {
-			stream.forEach(new Consumer<String>() {
-				@Override
-				public void accept(String line) {
-					String[] tmp = line.split("\\s");
-					long vertexId = Long.parseLong(tmp[0]);
-					vertexList.add(vertexId);
-				}
-			});
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		final int totalVertexCnt = vertexList.size();
-		CID_TO_VERTEX_ID = new long[totalVertexCnt];
-		// read edge file
-		try (Stream<String> stream = Files.lines(Paths.get(m_edgePath), StandardCharsets.US_ASCII)) {
-			final AtomicLong currentVertexId = new AtomicLong(vertexList.pop());
-			final AtomicInteger cnt = new AtomicInteger(0);
-			final LinkedList<Long> neighbors = new LinkedList<Long>();
-			stream.forEach(new Consumer<String>() {
-				@Override
-				public void accept(String line) {
-					String[] tmp = line.split("\\s");
-					long srcId = Long.parseLong(tmp[0]);
-					long dstId = Long.parseLong(tmp[1]);
-
-					// add to oel
-					while (srcId > currentVertexId.get()) {
-						VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
-						CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.getAndSet(vertexList.pop());
-						Vertex v = new Vertex();
-						v.setID(m_startVertexId + cnt.getAndIncrement());
-						v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
-						neighbors.clear();
-						m_oel.add(v);
-					}
-
-					neighbors.add(dstId);
-				}
-			});
-
-			// add remaining vertices (last from edge list + vertices without neighbors at the end)
-			{
-				VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
-				CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.get();
-				Vertex v = new Vertex();
-				v.setID(m_startVertexId + cnt.getAndIncrement());
-				v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
-				neighbors.clear();
-				m_oel.add(v);				
-			}
-			while (!vertexList.isEmpty()) {
-				currentVertexId.set(vertexList.pop());
-				VERTEX_ID_TO_CID.put(currentVertexId.get(), m_startVertexId + cnt.get());
-				CID_TO_VERTEX_ID[cnt.get()] = currentVertexId.get();
-				Vertex v = new Vertex();
-				v.setID(m_startVertexId + cnt.getAndIncrement());
-				v.setNeighbors(neighbors.stream().mapToLong(Long::longValue).toArray());
-				neighbors.clear();
-				m_oel.add(v);
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	private void loadFromBoelFile() {
+	    try (DataInputStream dis = new DataInputStream(
+	            new BufferedInputStream(
+	                    Files.newInputStream(
+	                            Paths.get(m_boelPath),
+	                            StandardOpenOption.READ),
+	                    1000000))) {
+	        CID_TO_VERTEX_ID = new long[m_numberOfVertices];
+	        for (int i = 0; i < m_numberOfVertices; i++) {
+	            CID_TO_VERTEX_ID[i] = dis.readLong();
+	            VERTEX_ID_TO_CID.put(CID_TO_VERTEX_ID[i], (long) i);
+	            int n = dis.readInt();
+	            long[] neighbors = new long[n];
+	            for (int j = 0; j < n; j++) {
+	                neighbors[j] = dis.readLong();
+	            }
+	            Vertex vertex = new Vertex();
+	            vertex.setID(i);
+	            vertex.setNeighbors(neighbors);
+	            m_oel.add(vertex);
+	        }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 		// convert neighbors
 		for (Vertex v : m_oel) {
@@ -143,7 +90,7 @@ public class GraphalyticsOrderedEdgeList implements OrderedEdgeList {
 	public Vertex readVertex() {
 		if (!m_loaded) {
 			m_loaded = true;
-			loadFromVertexEdgeFile();
+			loadFromBoelFile();
 		}
 
 		return m_oel.poll();

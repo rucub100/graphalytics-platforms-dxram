@@ -129,6 +129,7 @@ public final class BreadthFirstSearchJob extends DxramJob {
 		ChunkService chunkService = getService(ChunkService.class);
 		ChunkLocalService chunkLocalService = getService(ChunkLocalService.class);
 
+		LOG.info(String.format("Set BFS-ROOT: vertex=%d; CID=0x%x", sourceVertex, GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.get(sourceVertex)));
 		GraphRootList rootList = new GraphRootList(ChunkID.INVALID_ID,
 				new long[] { GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.get(sourceVertex) }); // index starts with 0; offset per slave?
 
@@ -163,8 +164,8 @@ public final class BreadthFirstSearchJob extends DxramJob {
 
 		MasterSlaveComputeService ms = getService(MasterSlaveComputeService.class);
 		oelTask = new GraphLoadOrderedEdgeListTask();
-		oelTask.setLoadVertexPath(vertexPath);
-		oelTask.setLoadEdgePath(edgePath);
+		oelTask.setLoadPath(loadedPath);
+		oelTask.setNumberOfVertices(m_numberOfVertices);
 		TaskScript taskScript = new TaskScript(oelTask);
 		ms.submitTaskScript(taskScript, (short)0, taskListener);
 
@@ -185,7 +186,17 @@ public final class BreadthFirstSearchJob extends DxramJob {
 //		}
 		// reserve local ids (CIDs)
 		ChunkLocalService cls = getService(ChunkLocalService.class);
-		cls.reserveLocal().reserve(600000000);
+		final long[] reservedCIDs = cls.reserveLocal().reserve(600000000);
+		LOG.error(String.format("RESERVE CIDs 1: 0x%x", reservedCIDs[0]));
+		LOG.error(String.format("RESERVE CIDs 2: 0x%x", reservedCIDs[1]));
+		LOG.error(String.format("RESERVE CIDs 3: 0x%x", reservedCIDs[2]));
+		LOG.error(String.format("RESERVE CIDs 4: 0x%x", reservedCIDs[3]));
+		LOG.error(String.format("RESERVE CIDs 5: 0x%x", reservedCIDs[4]));
+		LOG.error(String.format("RESERVE CIDs 6: 0x%x", reservedCIDs[5]));
+		LOG.error(String.format("RESERVE CIDs 7: 0x%x", reservedCIDs[6]));
+		LOG.error(String.format("RESERVE CIDs 8: 0x%x", reservedCIDs[7]));
+		LOG.error(String.format("RESERVE CIDs 9: 0x%x", reservedCIDs[8]));
+		LOG.error(String.format("RESERVE CIDs 10: 0x%x", reservedCIDs[9]));
 		// run task to load the graph partition index
 		submitGPITask();
 		// load graph into runner DXRAM instance

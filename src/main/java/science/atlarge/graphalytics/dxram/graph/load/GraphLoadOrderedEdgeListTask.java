@@ -50,9 +50,9 @@ public class GraphLoadOrderedEdgeListTask implements Task {
     private static final Logger LOGGER = LogManager.getFormatterLogger(GraphLoadOrderedEdgeListTask.class.getSimpleName());
 
     @Expose
-    private String m_vertexPath = "";
+    private String m_loadedPath = "";
     @Expose
-    private String m_edgePath = "";
+    private int m_numberOfVertices;
     @Expose
     private int m_vertexBatchSize = 100;
     @Expose
@@ -84,13 +84,13 @@ public class GraphLoadOrderedEdgeListTask implements Task {
      *         Check for and filter self loops per vertex
      */
     public GraphLoadOrderedEdgeListTask(
-    		final String p_vertexPath,
-    		final String p_edgePath,
+    		final String p_loadedPath,
+    		final int p_numberofVertices,
     		final int p_vertexBatchSize,
     		final boolean p_filterDupEdges,
     		final boolean p_filterSelfLoops) {
-        m_vertexPath = p_vertexPath;
-        m_edgePath = p_edgePath;
+        m_loadedPath = p_loadedPath;
+        m_numberOfVertices = p_numberofVertices;
         m_vertexBatchSize = p_vertexBatchSize;
         m_filterDupEdges = p_filterDupEdges;
         m_filterSelfLoops = p_filterSelfLoops;
@@ -112,18 +112,12 @@ public class GraphLoadOrderedEdgeListTask implements Task {
      * @param p_path
      *         Path to the vertex graph data file.
      */
-    public void setLoadVertexPath(final String p_path) {
-        m_vertexPath = p_path;
+    public void setLoadPath(final String p_path) {
+        m_loadedPath = p_path;
     }
 
-    /**
-     * Set the file path that contains the edge graph data.
-     *
-     * @param p_path
-     *         Path to the edge graph data file.
-     */
-    public void setLoadEdgePath(final String p_path) {
-        m_edgePath = p_path;
+    public void setNumberOfVertices(int p_numberOfVertices) {
+        m_numberOfVertices = p_numberOfVertices;
     }
 
     @Override
@@ -155,8 +149,8 @@ public class GraphLoadOrderedEdgeListTask implements Task {
         }
 
         OrderedEdgeList graphPartitionOel = setupOrderedEdgeListForCurrentSlave(
-        		m_vertexPath,
-        		m_edgePath,
+        		m_loadedPath,
+        		m_numberOfVertices,
         		graphPartitionIndex);
 
         if (graphPartitionOel == null) {
@@ -198,8 +192,8 @@ public class GraphLoadOrderedEdgeListTask implements Task {
 
     @Override
     public void exportObject(final Exporter p_exporter) {
-    	p_exporter.writeString(m_vertexPath);
-    	p_exporter.writeString(m_edgePath);
+    	p_exporter.writeString(m_loadedPath);
+    	p_exporter.writeInt(m_numberOfVertices);
         p_exporter.writeInt(m_vertexBatchSize);
         p_exporter.writeBoolean(m_filterDupEdges);
         p_exporter.writeBoolean(m_filterSelfLoops);
@@ -207,8 +201,8 @@ public class GraphLoadOrderedEdgeListTask implements Task {
 
     @Override
     public void importObject(final Importer p_importer) {
-    	m_vertexPath = p_importer.readString(m_vertexPath);
-    	m_edgePath = p_importer.readString(m_edgePath);
+    	m_loadedPath = p_importer.readString(m_loadedPath);
+    	m_numberOfVertices = p_importer.readInt(m_numberOfVertices);
         m_vertexBatchSize = p_importer.readInt(m_vertexBatchSize);
         m_filterDupEdges = p_importer.readBoolean(m_filterDupEdges);
         m_filterSelfLoops = p_importer.readBoolean(m_filterSelfLoops);
@@ -216,8 +210,8 @@ public class GraphLoadOrderedEdgeListTask implements Task {
 
     @Override
     public int sizeofObject() {
-        return sizeofString(m_vertexPath) + // m_vertexPath
-        		sizeofString(m_edgePath) +  // m_edgePath
+        return sizeofString(m_loadedPath) + // m_loadedPath
+        		Integer.BYTES +             // m_numberOfVertices
         		Integer.BYTES +             // m_vertexBatchSize
         		sizeofBoolean() +           // m_filterDupEdges
         		sizeofBoolean();            // m_filterSelfLoops
@@ -233,16 +227,16 @@ public class GraphLoadOrderedEdgeListTask implements Task {
      * @return OrderedEdgeList instance giving access to the list found for this slave or null on error.
      */
     private OrderedEdgeList setupOrderedEdgeListForCurrentSlave(
-    		final String p_vertexPath,
-    		final String p_edgePath,
+    		final String p_loadedPath,
+    		final int p_numberOfVertices,
     		final GraphPartitionIndex p_graphPartitionIndex) {
         // check if file exists
-        File vFile = new File(p_vertexPath);
-        File eFile = new File(p_edgePath);
+        File vFile = new File(p_loadedPath);
+        //File eFile = new File(p_edgePath);
 
-        if (!vFile.exists() | !eFile.exists()) {
+        if (!vFile.exists()) {
             // #if LOGGER >= ERROR
-            LOGGER.error("Cannot setup edge lists, path does not exist:\nvertexPath: %s \nedgePath: %s", p_vertexPath, p_edgePath);
+            LOGGER.error("Cannot setup edge lists, path does not exist:\nloadedPath: %s", p_loadedPath);
             // #endif /* LOGGER >= ERROR */
             return null;
         }
@@ -268,7 +262,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
         }
 
 
-        return new GraphalyticsOrderedEdgeList(m_vertexPath, m_edgePath, startOffset, endOffset, startVertexId);
+        return new GraphalyticsOrderedEdgeList(m_loadedPath, m_numberOfVertices);
     }
 
     /**
@@ -303,6 +297,7 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 currentPartitionIndexEntry.getVertexCount(), currentPartitionIndexEntry.getEdgeCount());
         // #endif /* LOGGER >= INFO */
 
+        int test = 0;
         GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.clear();
         while (true) {
             readCount = 0;
@@ -315,16 +310,22 @@ public class GraphLoadOrderedEdgeListTask implements Task {
                 long vid = GraphalyticsOrderedEdgeList.CID_TO_VERTEX_ID[(int)vertex.getID()];
                 vertex.setID(ChunkID.getChunkID(currentPartitionIndexEntry.getNodeId(), vertex.getID() + 1));
                 GraphalyticsOrderedEdgeList.VERTEX_ID_TO_CID.put(vid, vertex.getID());
+                if (10 > test++) {
+                    LOGGER.error(String.format("VERTEX-ID: %d AND CID: 0x%x", vid, vertex.getID()));
+                }
 
                 // re-basing of neighbors needed for multiple files
                 // offset tells us how much to add
                 // also add current node ID
                 long[] neighbours = vertex.getNeighbors();
-                if (!p_graphPartitionIndex.rebaseGlobalVertexIdToLocalPartitionVertexId(neighbours)) {
-                    // #if LOGGER >= ERROR
-                    LOGGER.error("Rebasing of neighbors of %s failed, out of vertex id range of graph: %s", vertex, Arrays.toString(neighbours));
-                    // #endif /* LOGGER >= ERROR */
+                for (int i = 0; i < neighbours.length; i++) {
+                    neighbours[i] = ChunkID.getChunkID(currentPartitionIndexEntry.getNodeId(), neighbours[i] + 1);
                 }
+//                if (!p_graphPartitionIndex.rebaseGlobalVertexIdToLocalPartitionVertexId(neighbours)) {
+//                    // #if LOGGER >= ERROR
+//                    LOGGER.error("Rebasing of neighbors of %s failed, out of vertex id range of graph: %s", vertex, Arrays.toString(neighbours));
+//                    // #endif /* LOGGER >= ERROR */
+//                }
 
                 // for now: check if we exceed the max number of neighbors that fit into a chunk
                 // this needs to be changed later to split the neighbor list and have a linked list

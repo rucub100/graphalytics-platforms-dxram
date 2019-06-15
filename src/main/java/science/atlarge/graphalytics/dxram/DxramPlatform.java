@@ -43,10 +43,8 @@ import science.atlarge.graphalytics.dxram.algorithms.lcc.LocalClusteringCoeffici
 import science.atlarge.graphalytics.dxram.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.dxram.algorithms.sssp.SingleSourceShortestPathsJob;
 import science.atlarge.graphalytics.dxram.algorithms.wcc.WeaklyConnectedComponentsJob;
-import science.atlarge.graphalytics.dxram.job.DropAllChunksJob;
 import science.atlarge.graphalytics.dxram.job.DxramJob;
 import science.atlarge.graphalytics.dxram.job.GraphalyticsAbstractJob;
-import science.atlarge.graphalytics.dxram.job.LoadGraphJob;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -91,60 +89,9 @@ public class DxramPlatform implements Platform {
 
     @Override
     public LoadedGraph loadGraph(FormattedGraph formattedGraph) throws Exception {
-        String edgeFilePath = formattedGraph.getEdgeFilePath();
-        if (!formattedGraph.isDirected()) {
-            edgeFilePath += ".2";
-            final Map<Long, SortedSet<Long>> tmpEdges = new HashMap<Long, SortedSet<Long>>();
-
-            try (final BufferedReader br = Files.newBufferedReader(
-                    Paths.get(formattedGraph.getEdgeFilePath()),
-                    StandardCharsets.US_ASCII)) {
-                String line = br.readLine();
-                while (line != null) {
-                    String[] tmp = line.split("\\s");
-                    final long left = Long.parseLong(tmp[0]);
-                    final long right = Long.parseLong(tmp[1]);
-                    // TODO(later): handle properties payload, i.e. if tmp.length > 2
-                    
-                    if (!tmpEdges.containsKey(left)) {
-                        tmpEdges.put(left, new TreeSet<Long>());
-                    }
-                    if (!tmpEdges.containsKey(right)) {
-                        tmpEdges.put(right, new TreeSet<Long>());
-                    }
-
-                    tmpEdges.get(left).add(right);
-                    tmpEdges.get(right).add(left);
-                    line = br.readLine();
-                }
-            } catch (Exception e) {
-                throw new PlatformExecutionException("Failed to load the undirected graph!", e);
-            }
-            System.gc();
-
-            try (final BufferedWriter bw = Files.newBufferedWriter(
-                            Paths.get(edgeFilePath), StandardCharsets.US_ASCII,
-                            StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-                
-
-                final LinkedList<Long> sortedLeft = new LinkedList<Long>(tmpEdges.keySet());
-                Collections.sort(sortedLeft);
-
-                while (!sortedLeft.isEmpty()) {
-                    final long left = sortedLeft.poll();
-                    for (long right : tmpEdges.remove(left)) {
-                        bw.write(String.valueOf(left) + " " + String.valueOf(right));
-                        bw.write('\n');
-                    }
-                }
-            } catch (Exception e) {
-                throw new PlatformExecutionException("Failed to load the undirected graph!", e);
-            }
-            tmpEdges.clear();
-            System.gc();
-        }
-
-        return new LoadedGraph(formattedGraph, formattedGraph.getVertexFilePath(), edgeFilePath);
+        String loadedPath = formattedGraph.getVertexFilePath().substring(0, formattedGraph.getVertexFilePath().length() - 1) + "boel";
+        LOG.info(String.format("Loaded path: %s", loadedPath));
+        return new LoadedGraph(formattedGraph, loadedPath);
     }
 
     @Override

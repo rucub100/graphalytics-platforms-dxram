@@ -64,6 +64,13 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 				.getRuntimeSetup()
 				.getLoadedGraph()
 				.getEdgePath();
+		this.loadedPath = runSpecification
+	            .getRuntimeSetup()
+	            .getLoadedGraph()
+	            .getLoadedPath();
+		this.m_numberOfVertices = (int) runSpecification
+	            .getRuntimeSetup()
+	            .getLoadedGraph().getFormattedGraph().getNumberOfVertices();
 		this.outputPath = benchmarkRunSetup
 			.getOutputDir()
 			.resolve(benchmarkRun.getName())
@@ -74,58 +81,6 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 	}
 
 	protected abstract void run();
-
-	protected void load(JobService jobService, List<Short> storageNodes) {
-		LOG.info(String.format(
-				"Create load graph job: id=%s, log-path=%s, vertex-path=%s, edge-path=%s, output-path=%s",
-				this.jobId,
-				this.logPath,
-				this.vertexPath,
-				this.edgePath,
-				this.outputPath));
-		LoadGraphJob loadGraphJob = new LoadGraphJob(
-				this.jobId,
-				this.logPath,
-				this.vertexPath,
-				this.edgePath,
-				this.outputPath,
-				this.platformConfig);
-
-		for (Short nodeId : storageNodes) {
-			LOG.info(String.format("Push load graph job to remote node %d...", nodeId));
-			jobService.pushJobRemote(loadGraphJob, nodeId);
-		}
-
-		LOG.info("Wait for all remote graph loading jobs to finish...");
-		jobService.waitForRemoteJobsToFinish();
-		LOG.info("All remote graph loading jobs finished");
-	}
-
-	protected void unload(JobService jobService, List<Short> storageNodes) {
-		LOG.info(String.format(
-				"Create unload graph job: id=%s, log-path=%s, vertex-path=%s, edge-path=%s, output-path=%s",
-				this.jobId,
-				this.logPath,
-				this.vertexPath,
-				this.edgePath,
-				this.outputPath));
-		DropAllChunksJob dropAllChunksJob = new DropAllChunksJob(
-				this.jobId,
-				this.logPath,
-				this.vertexPath,
-				this.edgePath,
-				this.outputPath,
-				this.platformConfig);
-
-		for (Short nodeId : storageNodes) {
-			LOG.info(String.format("Push unload graph job to remote node %d...", nodeId));
-			jobService.pushJobRemote(dropAllChunksJob, nodeId);
-		}
-
-		LOG.info("Wait for all remote graph unloading jobs to finish...");
-		jobService.waitForRemoteJobsToFinish();
-		LOG.info("All remote graph unloading jobs finished");
-	}
 
 	/**
 	 * Executes the platform job with the pre-defined parameters.
@@ -165,8 +120,8 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		}
 
 		// exclude this node which controls the benchmark and coordinates the runs
-		LOG.info(String.format("Exclude node [%d] which controls the benchmark", bootService.getNodeID()));
-		storageNodes.remove((Short)bootService.getNodeID());
+		//LOG.info(String.format("Exclude node [%d] which controls the benchmark", bootService.getNodeID()));
+		//storageNodes.remove((Short)bootService.getNodeID());
 		// exclude MS compute master
 		LOG.info(String.format("Exclude MS master node [%d]", stat.getMasterNodeId()));
 		storageNodes.remove((Short)stat.getMasterNodeId());
