@@ -165,8 +165,8 @@ public abstract class DxramJob extends GraphalyticsAbstractJob {
 		}
 
 		// exclude this node which controls the benchmark and coordinates the runs
-		LOG.info(String.format("Exclude node [%d] which controls the benchmark", bootService.getNodeID()));
-		storageNodes.remove((Short)bootService.getNodeID());
+		//LOG.info(String.format("Exclude node [%d] which controls the benchmark", bootService.getNodeID()));
+		//storageNodes.remove((Short)bootService.getNodeID());
 		// exclude MS compute master
 		LOG.info(String.format("Exclude MS master node [%d]", stat.getMasterNodeId()));
 		storageNodes.remove((Short)stat.getMasterNodeId());
